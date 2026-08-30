@@ -1,0 +1,15 @@
+# Tool configuration. Formatting rules live here so your editor, the pre-commit
+# hook and CI all read the same numbers and can never disagree.
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["config", "authentication"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]

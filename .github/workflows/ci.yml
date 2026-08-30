@@ -1,0 +1,56 @@
+# Runs on every pull request into main or staging. All five steps must pass.
+#
+# It runs against the STAGING settings, not dev: that is the closest thing to
+# production the suite can safely run under, so a setting that only works in dev
+# fails here instead of at deploy time.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [main, staging]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: isort
+        run: isort . --check-only --diff
+
+      - name: black
+        run: black --check --diff .
+
+      - name: flake8
+        run: flake8 .
+
+      # Fails if a model was changed without a matching migration -- the mistake
+      # that deploys fine and then breaks the moment a query runs.
+      - name: Check for missing migrations
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.staging
+          SECRET_KEY: ci-secret-key-not-used-for-anything-real
+          CI: "true"
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.staging
+          SECRET_KEY: ci-secret-key-not-used-for-anything-real
+          CI: "true"
+        run: pytest

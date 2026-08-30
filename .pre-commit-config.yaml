@@ -1,0 +1,38 @@
+# Runs formatters and linters before each commit, so CI never fails on style.
+#
+# Turn it on once per clone:
+#   pip install -r requirements-dev.txt
+#   pre-commit install
+#
+# It rewrites files in place when black or isort make a change: review the result
+# and commit again. Skip it in an emergency with `git commit --no-verify`.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      # Refuses a commit containing an AWS key, a private key, and similar. Not a
+      # substitute for keeping secrets in .env, but it catches the obvious slip.
+      - id: detect-private-key
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: ["--line-length=120"]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile=black", "--line-length=120"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8

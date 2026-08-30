@@ -1,0 +1,40 @@
+# Secrets. .env holds your database password, your API keys, your everything --
+# never commit it. The .example templates ARE committed; they hold no real values.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+/static/
+/media/
+
+# Tests and tooling
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Written by bootstrap.py so it refuses to run twice
+.bootstrapped

@@ -1,0 +1,13 @@
+# flake8 has no pyproject.toml support, so its config lives here.
+[flake8]
+max-line-length = 120
+# E203 disagrees with how black formats slices. Black wins.
+extend-ignore = E203
+exclude =
+    .git,
+    __pycache__,
+    */migrations/*,
+    .venv,
+    venv,
+    env,
+    docs

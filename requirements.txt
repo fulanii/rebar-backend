@@ -1,0 +1,14 @@
+Django==6.1
+django-cors-headers==4.9.0
+djangorestframework==3.18.0
+djangorestframework_simplejwt==5.5.1
+drf-spectacular==0.30.0
+google-auth==2.57.0
+python-dotenv==1.2.3
+resend==2.42.0
+brevo-python==5.0.2
+sqlparse==0.6.0
+requests==2.34.2
+psycopg2-binary==2.9.12
+django-redis==7.0.0
+gunicorn==26.2.0
