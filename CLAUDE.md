@@ -1,7 +1,7 @@
 # Working in this codebase
 
 Django REST Framework backend. Email-first JWT authentication with Google OAuth.
-Python 3.12, Django 5.2, DRF 3.16, PostgreSQL, Celery.
+Python 3.13, Django 5.2, DRF 3.16, PostgreSQL, Celery.
 
 Read `docs/ai/guardrails.md` before your first change. It is short and it is the
 difference between a change that ships and one that quietly breaks logins.
@@ -59,7 +59,10 @@ failing test. Run the three commands above before you say you are done.
 8. **Add tests with every endpoint.** Cover the failure paths, not just the success.
 9. **Never adopt an unverified account without discarding its password** — see
    guardrail 11. A social login proves the address, not the password on the row.
-10. **Do not add explanatory comments.** This codebase is almost comment-free by
+10. **Never commit or push to `main` or `staging`.** Branch, push the branch, open a
+    pull request. Those two branches deploy, and CI only runs on pull requests. See
+    `docs/git-workflow.md`.
+11. **Do not add explanatory comments.** This codebase is almost comment-free by
    design — reasoning lives in `docs/`, not above the line. One-line module
    docstrings, tool directives and view API docstrings only. See
    `docs/ai/conventions.md`.

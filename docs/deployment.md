@@ -52,7 +52,9 @@ Create two services from the same repository, each watching its own branch, each
 its own database, its own Redis, and its own environment variables. Merging to
 `staging` deploys staging; merging to `main` deploys production.
 
-Point CI at both branches — it already runs on pull requests into either.
+Point CI at both branches — it already runs on pull requests into either. It does
+**not** run on direct pushes, which is one reason nothing should reach either branch
+except through a merged pull request. See [git-workflow.md](git-workflow.md).
 
 ## Environment variables
 

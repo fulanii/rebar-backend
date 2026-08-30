@@ -25,3 +25,4 @@ every term used above in plain English.
 - Every view method needs a docstring; a test enforces it.
 - Secrets live in `.env`, never in code.
 - Do not add explanatory comments — reasoning goes in `docs/`, not above the line.
+- Never commit or push to `main` or `staging`. Branch, push, open a pull request.

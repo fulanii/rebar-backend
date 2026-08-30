@@ -5,8 +5,10 @@ Turn this boilerplate into your project.
     python bootstrap.py my_project
 
 Creates .env, .env.staging and .env.prod with fresh secret keys, clears the
-boilerplate's migrations, sets the API documentation title, and starts a new git
-repository. Run it once, immediately after cloning.
+boilerplate's migrations, sets the API documentation title, gitignores the
+boilerplate's own files (docs/ and this script), and starts a new git repository.
+
+Run it once, immediately after cloning.
 
 Standard library only, so it runs before you have installed anything.
 """
@@ -82,6 +84,37 @@ def write_env_files():
     return written
 
 
+def ignore_boilerplate_files():
+    """
+    Keep the boilerplate's own files out of your repository.
+
+    `docs/` is the boilerplate's documentation and this script has already done its
+    one job. Both stay on disk -- you and your AI tools still read the docs, and the
+    script is still there if you need it -- they simply never enter your history.
+
+    Delete these lines from .gitignore if you would rather your team had them too.
+    """
+    gitignore = ROOT / ".gitignore"
+
+    if not gitignore.exists():
+        print("  warning: no .gitignore, skipping")
+        return []
+
+    text = gitignore.read_text(encoding="utf-8")
+    present = {line.strip() for line in text.splitlines()}
+    missing = [entry for entry in ("docs/", "bootstrap.py") if entry not in present]
+
+    if not missing:
+        return []
+
+    added = "\n".join(missing)
+    gitignore.write_text(
+        f"{text.rstrip()}\n\n# Boilerplate's own files: yours to read, not to ship\n{added}\n",
+        encoding="utf-8",
+    )
+    return missing
+
+
 def clear_migrations():
     """Delete the boilerplate's migrations so your project starts with a clean history."""
     removed = 0
@@ -125,6 +158,10 @@ def main():
 
     removed = clear_migrations()
     print(f"  cleared {removed} boilerplate migration file(s)")
+
+    ignored = ignore_boilerplate_files()
+    if ignored:
+        print(f"  added {', '.join(ignored)} to .gitignore -- still on disk, just not committed")
 
     rewrite_titles(args.name)
     print(f"  set the API documentation title to '{title_from(args.name)} API'")

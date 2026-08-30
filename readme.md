@@ -95,11 +95,24 @@ git remote add origin git@github.com:you/my-project.git
 git push -u origin main staging
 ```
 
-Two long-lived branches, because that is what CI and the deployment guide assume:
-`staging` deploys to your staging service, `main` to production. Work on feature
-branches and open pull requests into `staging` — CI runs on every PR into either.
+Two long-lived branches: `staging` deploys to your staging service, `main` to
+production.
 
-See [docs/deployment.md](docs/deployment.md) when you are ready to ship.
+**Never commit to either of them directly.** The loop is:
+
+```
+branch off staging  →  push the branch  →  pull request  →  merge
+                                                              ↓
+                    git checkout staging && git pull  ←───────┘
+```
+
+CI runs on pull requests **only**, so a direct push to `main` runs no formatter, no
+linter, no migration check and no tests — and deploys anyway. Turn on branch
+protection for both branches so the rule holds even at 2am.
+
+[docs/git-workflow.md](docs/git-workflow.md) has the commands, the protection
+settings, and how to recover if you commit to `main` by accident.
+[docs/deployment.md](docs/deployment.md) covers shipping.
 
 ### 6. Point your AI tool at the docs
 
@@ -222,7 +235,8 @@ both avoidable.
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) | The rules an AI assistant must follow. Read automatically by most tools |
 | [docs/configuration.md](docs/configuration.md) | Every environment variable — what it does, what breaks without it |
-| [docs/email-templates.md](docs/email-templates.md) | Building the two Resend templates |
+| [docs/email-templates.md](docs/email-templates.md) | Building the two email templates (Brevo or Resend) |
+| [docs/git-workflow.md](docs/git-workflow.md) | Branching, pull requests, and why you never push to `main` |
 | [docs/deployment.md](docs/deployment.md) | Shipping to Railway and similar platforms |
 | `/docs/` when running | The interactive API reference, generated from the code |
 

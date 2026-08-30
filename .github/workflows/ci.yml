@@ -1,5 +1,4 @@
 # Runs on every pull request into main or staging. All five steps must pass.
-#
 # It runs against the STAGING settings, not dev: that is the closest thing to
 # production the suite can safely run under, so a setting that only works in dev
 # fails here instead of at deploy time.
@@ -8,8 +7,6 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, staging]
-  push:
     branches: [main, staging]
 
 jobs:
@@ -22,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: pip
 
       - name: Install dependencies

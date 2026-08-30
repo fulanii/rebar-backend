@@ -16,7 +16,8 @@ months later the codebase has four patterns for the same job.
 | [glossary.md](glossary.md) | Any time a word here is unfamiliar. No prior Django knowledge assumed. |
 
 Outside this folder: [../configuration.md](../configuration.md) documents every
-environment variable, and [../deployment.md](../deployment.md) covers shipping.
+environment variable, [../git-workflow.md](../git-workflow.md) covers branching and
+pull requests, and [../deployment.md](../deployment.md) covers shipping.
 
 ## If you are not a developer
 
