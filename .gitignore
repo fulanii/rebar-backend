@@ -10,6 +10,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .Python
+.python-version
 
 # Virtual environments
 .venv/

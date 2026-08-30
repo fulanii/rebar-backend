@@ -1,19 +1,19 @@
 # SaaS Boilerplate — Backend
 
 A production-ready Django REST Framework backend for the part of every SaaS that is
-identical every time: accounts. Clone it, rename it, and start building your actual
+identical every time: Clone it, rename it, and start building your actual
 product on top.
 
 Built to be worked on **through AI tools**. The structure is regular, the rules are
 written down in [`docs/ai/`](docs/ai/), and [`CLAUDE.md`](CLAUDE.md) /
 [`AGENTS.md`](AGENTS.md) point your assistant at them automatically.
 
-## Status
+---
+
+## What's in it
 
 **Authentication is complete** — 260 tests, all green, covering the failure paths as
 well as the happy ones.
-
-### Shipped
 
 | | |
 |---|---|
@@ -28,133 +28,31 @@ well as the happy ones.
 | **API reference** | Swagger at `/docs/`, generated from the code, development only. |
 | **Project setup** | Four settings modules, `bootstrap.py`, CI, pre-commit, and the `docs/ai/` rule set. |
 
-### Next
-
-Nothing below is started. They are the layers most projects reach for after accounts,
-in roughly the order people need them:
-
-| | |
-|---|---|
-| **Billing** | Stripe subscriptions — plans, checkout, customer portal, webhooks, plan changes, and a permission class for gating paid features. |
-| **Background jobs** | Celery and a broker, so email and other slow work leave the request cycle. |
-| **Admin back-office** | A permissioned API over the domain services — user lookup, suspension, support actions — with roles via Django groups. |
-| **File uploads** | S3-compatible object storage with presigned URLs. |
-| **Phone verification** | SMS codes. The `phone_number` field is already collected and validated. |
-
-### Deliberately left out
-
-- **A profile-update endpoint.** Which fields are editable is a product decision, and
-  the wrong default is worse than none. [The recipe](docs/ai/recipes/add-an-endpoint.md)
-  walks through adding one.
-- **More social providers.** Google is wired end to end and is the pattern to copy.
-- **Docker.** The target platforms build from the repo; see
-  [docs/deployment.md](docs/deployment.md).
+Billing, background jobs, an admin back-office and more are the layers most projects
+add next — see the [roadmap](docs/roadmap.md) for what is planned and what is left out
+on purpose.
 
 ---
 
-## Getting started
-
-### 1. Clone it and make it yours
+## Quickstart
 
 ```bash
 git clone <this repo> my-project && cd my-project
 python bootstrap.py my_project
-```
 
-`bootstrap.py` writes `.env`, `.env.staging` and `.env.prod` — each with its own
-generated `SECRET_KEY` — clears the boilerplate's migrations, titles the API docs
-after your project, gitignores the boilerplate's own files (`docs/` and the script
-itself, both of which stay on disk), and replaces this repo's git history with a fresh
-one, so your first commit is genuinely your first commit.
-
-Run it once, before anything else. It refuses to run twice.
-
-### 2. Install and run
-
-```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-python manage.py makemigrations
-python manage.py migrate
+python manage.py makemigrations && python manage.py migrate
 python manage.py runserver
 ```
 
-Open **http://localhost:8000/docs/** — every endpoint, with its request and response
-shapes, generated from the code.
+Open **http://localhost:8000/docs/**. Runs on SQLite with no setup at all, and
+`pytest` should be green before you go further.
 
-Runs on SQLite with no setup at all.
-
-### 3. Check it works
-
-```bash
-pytest
-```
-
-Green means the whole auth flow works on your machine. If it isn't, stop here — every
-step below assumes it is.
-
-### 4. Fill in `.env`
-
-The app runs without any of these; each one switches on a feature.
-
-| To get | Set |
-|---|---|
-| Verification and password-reset emails | `EMAIL_PROVIDER` (`brevo` or `resend`), that provider's API key, and the two template ids — see [docs/email-templates.md](docs/email-templates.md) |
-| Sign in with Google | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — see [docs/configuration.md](docs/configuration.md) |
-
-**Nobody can finish registering until the email templates exist**, since verification
-is part of signing up. Do that before your first real user.
-
-### 5. Set up your branches
-
-```bash
-git add -A && git commit -m "Initial commit"
-git branch -M main
-git checkout -b staging
-
-# create an empty repo on GitHub, then:
-git remote add origin git@github.com:you/my-project.git
-git push -u origin main staging
-```
-
-Two long-lived branches: `staging` deploys to your staging service, `main` to
-production.
-
-**Never commit to either of them directly.** The loop is:
-
-```
-branch off staging  →  push the branch  →  pull request  →  merge
-                                                              ↓
-                    git checkout staging && git pull  ←───────┘
-```
-
-CI runs on pull requests **only**, so a direct push to `main` runs no formatter, no
-linter, no migration check and no tests — and deploys anyway. Turn on branch
-protection for both branches so the rule holds even at 2am.
-
-[docs/git-workflow.md](docs/git-workflow.md) has the commands, the protection
-settings, and how to recover if you commit to `main` by accident.
-[docs/deployment.md](docs/deployment.md) covers shipping.
-
-### 6. Point your AI tool at the docs
-
-Most tools read [`CLAUDE.md`](CLAUDE.md) or [`AGENTS.md`](AGENTS.md) automatically, so
-usually there is nothing to do. If yours does not, start a session with:
-
-> Read `CLAUDE.md`, `docs/ai/guardrails.md`, `docs/ai/architecture.md` and
-> `docs/ai/conventions.md` before making any changes. Follow the recipes in
-> `docs/ai/recipes/` when adding an endpoint, a model or an app.
-
-Read [`docs/ai/guardrails.md`](docs/ai/guardrails.md) yourself too, even if you never
-open the code. It is short, and it is the list of things that quietly break this
-project — the kind of change an assistant will happily make if you ask it to "just get
-the tests passing".
-
-### 7. Start building
-
-Add your own app beside `authentication/`:
-[docs/ai/recipes/add-an-app.md](docs/ai/recipes/add-an-app.md).
+**[docs/getting-started.md](docs/getting-started.md)** takes it from here: filling in
+`.env`, wiring up email and Google sign-in, setting up your branches, and pointing
+your AI tool at the rules.
 
 ---
 
@@ -177,79 +75,8 @@ Add your own app beside `authentication/`:
 | POST | `/token/refresh/` | New access token from the cookie |
 | POST | `/token/blacklist/` | Sign out |
 
-Full request and response documentation for each is in the Swagger page, generated
+Full request and response documentation for each is on the Swagger page, generated
 from the docstrings in the code.
-
----
-
-## Configuration
-
-Everything comes from environment variables. **The app loads exactly one file:
-`.env`.** Which settings module runs is a line inside it:
-
-```
-DJANGO_SETTINGS_MODULE=config.settings.dev      # or .staging, or .prod
-```
-
-`bootstrap.py` also writes `.env.staging` and `.env.prod`, each with its own generated
-`SECRET_KEY`. **Those two are never loaded** — they are where you keep each
-environment's values, so you can see at a glance what is in use where, and copy from
-them into `.env` or into your host's dashboard.
-
-A real environment variable always beats the file, so on a host where you set values
-in a dashboard, no `.env` needs to exist at all.
-
-**[docs/configuration.md](docs/configuration.md) documents every variable** — what it
-does, when it is required, and what breaks without it. Three worth knowing up front:
-
-- `SECRET_KEY` — different in every environment. A leaked dev key must not be able to
-  forge production sessions.
-- `REDIS_URL` — required as soon as you run more than one worker, or Google sign-in
-  fails intermittently.
-- `GOOGLE_CLIENT_ID` / `_SECRET` — the callback URL must match what you registered
-  with Google exactly, trailing slash included. This is the usual reason it fails.
-
----
-
-## Development
-
-```bash
-pytest                            # the whole suite
-pytest authentication -q          # one app
-black . && isort . && flake8 .    # exactly what CI runs
-pre-commit install                # run the above automatically before each commit
-```
-
-CI fails on any formatting difference, lint error, missing migration, or failing test.
-
-### Reading a verification code locally
-
-Without a Resend key, no email is sent. The code is hashed in the database and cannot
-be read back — for local testing either set a real key, or temporarily log the raw
-code in `authentication/views/user_registration.py` and remove that line before
-committing.
-
----
-
-## Deploying
-
-Built for platforms that deploy from a Git repository — Railway, Render, Fly, Heroku.
-Connect the repo, set environment variables in the dashboard, and each merge ships.
-
-The usual setup is two services from one repository: `staging` branch →
-`config.settings.staging`, `main` branch → `config.settings.prod`, each with its own
-database and Redis.
-
-There is no Dockerfile and no Procfile — these platforms install `requirements.txt`
-themselves, and you give them the start and release commands in the dashboard.
-
-**[docs/deployment.md](docs/deployment.md)** has those commands, plus the
-branch/service setup, the add-ons to provision, the migration-ordering rule that makes
-rollbacks survivable, and what to do after the first deploy.
-
-Production enforces HTTPS, sets HSTS, and does **not** mount the API docs or the
-Django admin. Publishing your full API surface, and adding a login form to attack, are
-both avoidable.
 
 ---
 
@@ -257,14 +84,15 @@ both avoidable.
 
 | Guide | Covers |
 |---|---|
-| [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) | The rules an AI assistant must follow. Read automatically by most tools |
-| [docs/configuration.md](docs/configuration.md) | Every environment variable — what it does, what breaks without it |
-| [docs/email-templates.md](docs/email-templates.md) | Building the two email templates (Brevo or Resend) |
-| [docs/git-workflow.md](docs/git-workflow.md) | Branching, pull requests, and why you never push to `main` |
-| [docs/deployment.md](docs/deployment.md) | Shipping to Railway and similar platforms |
-| `/docs/` when running | The interactive API reference, generated from the code |
+| [getting-started.md](docs/getting-started.md) | Clone to first deploy, step by step |
+| [configuration.md](docs/configuration.md) | Every environment variable — what it does, what breaks without it |
+| [email-templates.md](docs/email-templates.md) | Building the two email templates (Brevo or Resend) |
+| [git-workflow.md](docs/git-workflow.md) | Branching, pull requests, and why you never push to `main` |
+| [deployment.md](docs/deployment.md) | Shipping to Railway and similar platforms |
+| [roadmap.md](docs/roadmap.md) | What is built, planned, and deliberately absent |
 
-And in [`docs/ai/`](docs/ai/), the house rules:
+And in [`docs/ai/`](docs/ai/), the house rules — written for an assistant, useful to
+anyone:
 
 | Guide | Covers |
 |---|---|
