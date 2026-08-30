@@ -4,9 +4,10 @@ Turn this boilerplate into your project.
 
     python bootstrap.py my_project
 
-Creates .env, .env.staging and .env.prod with fresh secret keys, clears the
-boilerplate's migrations, sets the API documentation title, gitignores the
-boilerplate's own files (docs/ and this script), and starts a new git repository.
+Creates .env, .env.staging and .env.prod with fresh secret keys and removes the
+.example templates they replace, clears the boilerplate's migrations, sets the API
+documentation title, gitignores the boilerplate's own files (docs/ and this script),
+and starts a new git repository.
 
 Run it once, immediately after cloning.
 
@@ -52,13 +53,21 @@ def rewrite_titles(name):
 
 def write_env_files():
     """
-    Create .env, .env.staging and .env.prod from their .example files.
+    Create .env, .env.staging and .env.prod from their .example templates.
 
     Each gets its own generated SECRET_KEY, so a leaked development key cannot forge
     production sessions. Only .env is ever loaded; the other two are yours to fill in
-    and copy from. Existing files are never overwritten.
+    and copy from.
+
+    Each template is deleted once its real file exists -- the real file carries the
+    same variables, so keeping the template around would leave two nearly identical
+    files and an obvious way to edit the wrong one. Existing files are never
+    overwritten.
+
+    Returns `(created, removed)`.
     """
-    written = []
+    created = []
+    removed = []
 
     for example_name, target_name in (
         (".env.example", ".env"),
@@ -68,20 +77,23 @@ def write_env_files():
         example = ROOT / example_name
         target = ROOT / target_name
 
+        if not example.exists():
+            if not target.exists():
+                print(f"  warning: {example_name} is missing, skipping")
+            continue
+
         if target.exists():
             print(f"  {target_name} already exists, leaving it alone")
-            continue
+        else:
+            text = example.read_text(encoding="utf-8")
+            text = text.replace("SECRET_KEY=", f"SECRET_KEY={secrets.token_urlsafe(50)}", 1)
+            target.write_text(text, encoding="utf-8")
+            created.append(target_name)
 
-        if not example.exists():
-            print(f"  warning: {example_name} is missing, skipping")
-            continue
+        example.unlink()
+        removed.append(example_name)
 
-        text = example.read_text(encoding="utf-8")
-        text = text.replace("SECRET_KEY=", f"SECRET_KEY={secrets.token_urlsafe(50)}", 1)
-        target.write_text(text, encoding="utf-8")
-        written.append(target_name)
-
-    return written
+    return created, removed
 
 
 def ignore_boilerplate_files():
@@ -152,12 +164,14 @@ def main():
 
     print(f"\n  Setting up '{args.name}'\n")
 
-    written = write_env_files()
-    if written:
-        print(f"  wrote {', '.join(written)}, each with its own fresh SECRET_KEY")
+    created, removed = write_env_files()
+    if created:
+        print(f"  wrote {', '.join(created)}, each with its own fresh SECRET_KEY")
+    if removed:
+        print(f"  removed {len(removed)} .example template(s) -- the real files replace them")
 
-    removed = clear_migrations()
-    print(f"  cleared {removed} boilerplate migration file(s)")
+    cleared = clear_migrations()
+    print(f"  cleared {cleared} boilerplate migration file(s)")
 
     ignored = ignore_boilerplate_files()
     if ignored:
@@ -171,7 +185,8 @@ def main():
 
     MARKER.write_text(f"{args.name}\n", encoding="utf-8")
 
-    print("""
+    print(
+        """
   Done. Next:
 
     python -m venv .venv && source .venv/bin/activate
@@ -189,7 +204,8 @@ def main():
   Configuration:  docs/configuration.md
   Deployment:     docs/deployment.md
   Before your first change: docs/ai/guardrails.md
-""")
+"""
+    )
 
 
 if __name__ == "__main__":

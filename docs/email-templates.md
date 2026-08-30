@@ -135,7 +135,7 @@ That tests the template; the tests here cover the code that calls it.
 
 1. Create and activate the template.
 2. Add a `<NAME>_TEMPLATE_ID` setting in `config/settings/base.py` and to all three
-   `.env*.example` files.
+   env files.
 3. Add a sender function in `authentication/utils/email/__init__.py` following
    `send_verification_email`, and export it from `authentication/utils/__init__.py`.
 4. Document its variables in the table above.

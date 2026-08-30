@@ -5,8 +5,9 @@ into the code.
 
 ## How it loads
 
-**The app reads exactly one file: `.env`.** `bootstrap.py` creates it from
-`.env.example` with a generated `SECRET_KEY`.
+**The app reads exactly one file: `.env`.** `bootstrap.py` creates it, with a
+generated `SECRET_KEY`, from a template it then deletes — so after bootstrap there is
+one file per environment and no near-identical copy to edit by mistake.
 
 Which settings module runs is decided by `DJANGO_SETTINGS_MODULE`, and that variable
 lives in `.env` like any other:
@@ -25,8 +26,8 @@ moves.
 
 ### `.env.staging` and `.env.prod`
 
-`bootstrap.py` writes these too, from their `.example` templates, each with its own
-generated `SECRET_KEY`. **Neither is ever loaded.**
+`bootstrap.py` writes these too, each with its own generated `SECRET_KEY`.
+**Neither is ever loaded.**
 
 They are where you keep each environment's real values: the staging database URL, the
 production Resend key, and so on. That way you can see at a glance what is in use
@@ -44,8 +45,7 @@ A real environment variable always wins over `.env`. On a host like Railway you 
 values in a dashboard and ship no env file at all — better, since nothing sensitive
 touches the disk. A missing `.env` is not an error.
 
-The `.env*` files are gitignored. The three `.example` templates are committed and
-hold no real values.
+All three are gitignored, so none of them can be committed.
 
 ---
 

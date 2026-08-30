@@ -35,7 +35,7 @@ WELCOME_TEMPLATE_ID = os.getenv("WELCOME_TEMPLATE_ID", "")
 ```
 
 No provider prefix: the id belongs to whichever provider is configured. Add the
-variable to all three `.env*.example` files.
+variable to all three env files.
 
 ---
 

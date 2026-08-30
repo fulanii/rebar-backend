@@ -121,9 +121,10 @@ Kept in `.env` locally; set in your hosting dashboard in production.
 ### `.env`
 The single file holding your secrets, gitignored. It also carries
 `DJANGO_SETTINGS_MODULE`, which decides whether the dev, staging or production
-settings run. Never commit it, never paste it into a chat. `.env.example` is the
-committed template; `.env.staging.example` and `.env.prod.example` are reference
-lists of what those environments need and are never loaded.
+settings run. Never commit it, never paste it into a chat.
+
+`.env.staging` and `.env.prod` sit beside it holding each environment's values. Neither
+is ever loaded — they are reference, and what you copy from when deploying.
 
 ### Settings module
 Which configuration file the app loads: `config.settings.dev` on your machine,
