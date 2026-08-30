@@ -27,14 +27,21 @@ access to every account.
 **The temptation:** you hit a 429 while testing and it is in the way. The fastest fix
 is to change `5/hour` to `500/hour`.
 
-**What it breaks:** the limit on `code_submit` is the *only* thing making a 6-digit
-code safe. A million combinations at five attempts an hour is not an attack anyone
-can run. At five hundred an hour it is a few days of scripted guessing, unattended,
-against every account.
+**What it breaks:** the limit on `code_submit` is most of what makes a 6-digit code
+safe. A million combinations at five attempts an hour is not an attack anyone can run.
+At five hundred an hour it is a few days of scripted guessing, unattended, against
+every account.
+
+The throttles are keyed by IP, so they are only half the story. The other half is
+`MAX_ATTEMPTS` on the code itself (`authentication/models/one_time_code.py`): five
+wrong guesses burn the code no matter how many addresses they came from, and the user
+requests a new one. Removing that counter re-opens the door the throttle cannot close.
 
 **Do this instead:** in tests, the cache is cleared between tests automatically —
 if you are hitting a limit, you are probably making more requests in one test than
-the endpoint expects. In manual testing, restart the server or clear the cache.
+the endpoint expects. A test of something sitting *behind* the throttle can take the
+`unlimited_requests` fixture, which lifts the limits for that test only. In manual
+testing, restart the server or clear the cache.
 
 ---
 
@@ -64,10 +71,10 @@ than "Incorrect email or password."
 given address has an account here. That list is the first thing anyone planning a
 credential-stuffing or phishing campaign wants.
 
-**Do this instead:** wrong password, unknown address, expired code and used code all
-return the **same** message. Password reset and resend-verification return 200 for
-addresses that do not exist. There are tests asserting exactly this; if you change a
-message, run them.
+**Do this instead:** wrong password, unknown address, expired code, used code and a
+code that has run out of attempts all return the **same** message. Password reset and
+resend-verification return 200 for addresses that do not exist. There are tests
+asserting exactly this; if you change a message, run them.
 
 The one deliberate exception: an unverified account is told to verify — but only
 after its password has been confirmed correct, so it cannot be used to probe.
@@ -181,11 +188,73 @@ proof of ownership they skipped.
 An account that *was* already verified keeps its password — that user did prove
 ownership, and a social login should be a second way in, not a lockout.
 
-`authentication/utils/google_oauth.py` does this, and three tests pin it.
+The same reasoning runs the other way at registration. An unverified row cannot hold
+an address hostage either: registering with an address that has one **takes it over**,
+overwriting every field, discarding the old password and emailing a fresh code. Without
+that, anyone could permanently lock a person out of your product by registering their
+email and never verifying it. A **verified** address is still rejected.
+
+`authentication/utils/google_oauth.py` and
+`authentication/serializers/user_registration.py` do this, and both are pinned by
+tests.
 
 ---
 
-## 12. `is_active` is not a spare field
+## 12. A password reset must end every other session
+
+**The temptation:** the reset endpoint sets a new password and returns 200. Job done.
+
+**What it breaks:** a reset usually means *someone else is in the account*. Their
+refresh token is good for seven days and knows nothing about the new password, so
+rotating it changes nothing for them. The user believes they have locked the intruder
+out. They have not.
+
+**Do this instead:** call `revoke_sessions(user)` from `authentication/utils/` in the
+same transaction. It does two things, because the two token types are stored
+differently:
+
+- **Refresh tokens** are rows, so they are blacklisted.
+- **Access tokens** are stored nowhere at all, so the user row is stamped with
+  `sessions_revoked_at` and `authentication/auth.py` refuses any token whose `iat` is
+  at or before it. Without that stamp the intruder keeps working for up to 30 more
+  minutes — most of a reset's value, gone.
+
+Never delete the `sessions_revoked_at` check to fix a test. A test that fails on it is
+usually issuing a token and revoking in the same second, which the check refuses on
+purpose; move the stamp, not the check.
+
+Password *change* deliberately does not revoke: that user is signed in and gave the
+current password, so the other sessions are theirs. Both paths do email a
+notification, which is how a change nobody made becomes visible.
+
+---
+
+## 13. Changing the login address needs the password, and a code to the new one
+
+**The temptation:** the request is authenticated, so take `new_email` and save it.
+
+**What it breaks:** two different things, and both are fatal.
+
+Skipping the **password** means a stolen access token can move the account to an
+address the attacker controls — and then reset the password at leisure. Thirty
+minutes of stolen token becomes permanent ownership.
+
+Skipping the **code to the new address** means the account can be moved to an address
+nobody has proved they own. That is a typo away from locking a real user out of their
+own account, and one deliberate keystroke away from parking your users on a domain
+someone else controls.
+
+**Do this instead:** what `authentication/views/emails/` does. The password is
+required even though the request is authenticated; a code goes to the new address and
+**only** the new address; and availability is checked twice — once when the code is
+issued and again when it is used, because minutes pass in between.
+
+Google accounts are refused outright: they have no password to confirm, and moving the
+address would break the link to the Google identity that signs them in.
+
+---
+
+## 14. `is_active` is not a spare field
 
 It means "has verified their email". Registration deliberately creates users with
 `is_active=False`, and Django's own auth refuses to authenticate them. Repurposing it

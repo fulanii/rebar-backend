@@ -8,6 +8,9 @@ because the refresh cookie is scoped to that path.
 from django.urls import path
 
 from authentication.views import (
+    AccountDeletionView,
+    EmailChangeConfirmView,
+    EmailChangeRequestView,
     EmailVerificationResendView,
     EmailVerificationView,
     GoogleOAuthCallbackView,
@@ -30,6 +33,9 @@ urlpatterns = [
     path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset-request"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
     path("change-password/", PasswordChangeView.as_view(), name="change-password"),
+    path("change-email/", EmailChangeRequestView.as_view(), name="change-email"),
+    path("change-email/confirm/", EmailChangeConfirmView.as_view(), name="change-email-confirm"),
+    path("delete-account/", AccountDeletionView.as_view(), name="delete-account"),
     path("google/login/", GoogleOAuthLoginView.as_view(), name="google-oauth-login"),
     path("google/callback/", GoogleOAuthCallbackView.as_view(), name="google-oauth-callback"),
     path("google/exchange/", GoogleOAuthExchangeView.as_view(), name="google-oauth-exchange"),

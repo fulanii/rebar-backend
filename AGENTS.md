@@ -21,7 +21,9 @@ every term used above in plain English.
 
 - Run `pytest` and `black . && isort . && flake8 .` before claiming you are done.
 - The refresh token never appears in a response body -- only in the httpOnly cookie.
-- Never lower a rate limit to make a test pass.
+- Never lower a rate limit, or drop a code's attempt counter, to make a test pass.
+- A completed password reset revokes every session — refresh tokens *and* live
+  access tokens — via `revoke_sessions()`. A password change deliberately does not.
 - Every view method needs a docstring; a test enforces it.
 - Secrets live in `.env`, never in code.
 - Do not add explanatory comments — reasoning goes in `docs/`, not above the line.

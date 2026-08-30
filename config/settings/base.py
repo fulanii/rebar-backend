@@ -121,6 +121,8 @@ REST_FRAMEWORK = {
         "code_request": "5/hour",
         "code_submit": "5/hour",
         "password_reset": "5/hour",
+        "email_change": "5/hour",
+        "account_deletion": "5/hour",
         "user_info": "60/minute",
     },
 }
@@ -134,6 +136,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
+    "UPDATE_LAST_LOGIN": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
@@ -175,6 +178,10 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 VERIFICATION_TEMPLATE_ID = os.getenv("VERIFICATION_TEMPLATE_ID", "")
 
 PASSWORD_RESET_TEMPLATE_ID = os.getenv("PASSWORD_RESET_TEMPLATE_ID", "")
+
+PASSWORD_CHANGED_TEMPLATE_ID = os.getenv("PASSWORD_CHANGED_TEMPLATE_ID", "")
+
+EMAIL_CHANGE_TEMPLATE_ID = os.getenv("EMAIL_CHANGE_TEMPLATE_ID", "")
 
 DOMAIN = os.getenv("DOMAIN", "localhost")
 

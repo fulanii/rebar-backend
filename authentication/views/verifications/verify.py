@@ -77,9 +77,9 @@ class EmailVerificationView(APIView):
         ```
 
         ### 400 Bad Request
-        Wrong code, expired code, already-used code, or unknown address -- all return
-        the same body on purpose, so this endpoint cannot be used to discover which
-        addresses have accounts.
+        Wrong code, expired code, already-used code, a code that has run out of
+        attempts, or an unknown address -- all return the same body on purpose, so
+        this endpoint cannot be used to discover which addresses have accounts.
 
         ```json
         {
@@ -108,7 +108,11 @@ class EmailVerificationView(APIView):
         1. The user and their verification row are looked up.
         2. `is_valid` rejects a used or expired code before the hash is checked.
         3. The submitted code is compared against the stored **hash**.
-        4. On success the code is burned (`used=True`) so it cannot be replayed, and
+        4. A wrong code is counted against that code. After 5 wrong guesses it is
+           burned and the user has to request a new one at
+           `POST auth/resend-verification/`. The per-IP throttle cannot stop the same
+           code being guessed from many addresses at once; this can.
+        5. On success the code is burned (`used=True`) so it cannot be replayed, and
            the account is set active and verified.
         """
 
@@ -121,7 +125,13 @@ class EmailVerificationView(APIView):
         user = CustomUser.objects.filter(email=email).first()
         verification = EmailVerification.objects.filter(user=user).first() if user else None
 
-        if verification is None or not verification.is_valid or not verification.check_code(code):
+        if verification is None or not verification.is_valid:
+            logger.info("event=email_verification_failed email=%s", email)
+            return Response({"detail": INVALID_CODE}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not verification.check_code(code):
+            if verification.register_failure():
+                logger.info("event=email_verification_code_exhausted email=%s", email)
             logger.info("event=email_verification_failed email=%s", email)
             return Response({"detail": INVALID_CODE}, status=status.HTTP_400_BAD_REQUEST)
 

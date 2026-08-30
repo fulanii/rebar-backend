@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.models import update_last_login
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -122,7 +123,7 @@ class UserLoginView(APIView):
         1. The serializer authenticates the credentials; an inactive (unverified)
            account fails, and is distinguished only after the password is confirmed
            correct.
-        2. A refresh/access pair is issued.
+        2. A refresh/access pair is issued and `last_login` is stamped.
         3. The refresh token is written to the httpOnly cookie and removed from the
            body. Only the access token is returned.
         """
@@ -132,6 +133,7 @@ class UserLoginView(APIView):
         user = serializer.validated_data["user"]
 
         refresh = RefreshToken.for_user(user)
+        update_last_login(None, user)
 
         logger.info("event=login_success email=%s", user.email)
 

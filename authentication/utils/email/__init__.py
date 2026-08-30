@@ -79,3 +79,35 @@ def send_password_reset_email(to_email, first_name, code):
             "EXPIRY_MINUTES": CODE_EXPIRY_MINUTES,
         },
     )
+
+
+def send_password_changed_email(to_email, first_name):
+    """
+    Tell a user their password just changed, so a change they did not make is visible.
+
+    Template: `PASSWORD_CHANGED_TEMPLATE_ID`
+    Variables: `FIRST_NAME`
+    """
+    return _send(
+        to_email,
+        template_id=settings.PASSWORD_CHANGED_TEMPLATE_ID,
+        variables={"FIRST_NAME": first_name},
+    )
+
+
+def send_email_change_email(to_email, first_name, code):
+    """
+    Email the code that moves an account to this address. Sent to the **new** address.
+
+    Template: `EMAIL_CHANGE_TEMPLATE_ID`
+    Variables: `FIRST_NAME`, `CODE`, `EXPIRY_MINUTES`
+    """
+    return _send(
+        to_email,
+        template_id=settings.EMAIL_CHANGE_TEMPLATE_ID,
+        variables={
+            "FIRST_NAME": first_name,
+            "CODE": code,
+            "EXPIRY_MINUTES": CODE_EXPIRY_MINUTES,
+        },
+    )

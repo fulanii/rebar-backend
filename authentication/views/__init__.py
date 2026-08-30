@@ -1,5 +1,7 @@
 """View exports. Import from the package, not from the module files."""
 
+from .account_deletion import AccountDeletionView
+from .emails import EmailChangeConfirmView, EmailChangeRequestView
 from .google_auth import GoogleOAuthCallbackView, GoogleOAuthExchangeView, GoogleOAuthLoginView
 from .jwt_tokens import CustomTokenBlacklistView, CustomTokenObtainPairView, CustomTokenRefreshView
 from .passwords import PasswordChangeView, PasswordResetConfirmView, PasswordResetRequestView
@@ -9,6 +11,9 @@ from .user_registration import UserRegistrationView
 from .verifications import EmailVerificationResendView, EmailVerificationView
 
 __all__ = [
+    "AccountDeletionView",
+    "EmailChangeRequestView",
+    "EmailChangeConfirmView",
     "EmailVerificationView",
     "EmailVerificationResendView",
     "GoogleOAuthLoginView",

@@ -6,6 +6,7 @@ import pytest
 from django.utils import timezone
 
 from authentication.models import EmailVerification, PasswordReset
+from authentication.models.one_time_code import MAX_ATTEMPTS
 from authentication.utils import issue_code
 
 pytestmark = pytest.mark.django_db
@@ -49,6 +50,18 @@ class TestIssueCode:
 
         assert reissued.used is False
         assert reissued.used_at is None
+        assert reissued.is_valid is True
+
+    def test_reissuing_clears_the_attempt_counter(self, base_user):
+        issue_code(EmailVerification, base_user)
+        verification = EmailVerification.objects.get(user=base_user)
+        for _ in range(MAX_ATTEMPTS):
+            verification.register_failure()
+
+        issue_code(EmailVerification, base_user)
+        reissued = EmailVerification.objects.get(user=base_user)
+
+        assert reissued.attempts == 0
         assert reissued.is_valid is True
 
     def test_reissuing_extends_the_expiry(self, base_user):

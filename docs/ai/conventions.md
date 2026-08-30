@@ -73,7 +73,8 @@ Test names are sentences. `test_login_2` tells you nothing when it fails at 3am.
 - **Text fields are `blank=True` with `default=""`, never `null=True`.** Absent is
   always `""`, so code never has to handle both `None` and `""`. Check with
   `if not user.phone_number:`.
-- Every field gets a comment when its purpose is not obvious from its name.
+- A field whose purpose is not obvious from its name is named better, or explained
+  in `docs/` — not commented. See the comments section below.
 - Rules that must *always* hold go in the database (`unique=True`, constraints), not
   only in a serializer. A serializer can be bypassed; the database cannot.
 

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from authentication.models import EmailVerification
+from authentication.utils import issue_code
 
 User = get_user_model()
 
@@ -157,3 +158,67 @@ class TestRegisterAtomicity:
             api_client.post(reverse("register"), payload(), format="json")
 
         assert committed["exists"] is True
+
+
+class TestRegisterTakesOverAnUnverifiedAccount:
+    """
+    Guardrail: an unverified row proves nothing, so it cannot hold an address hostage.
+
+    Registering someone else's email and never verifying it would otherwise lock the
+    real owner out of the product permanently.
+    """
+
+    def test_the_address_is_accepted(self, api_client, unverified_user):
+        response = api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        assert response.status_code == 201
+
+    def test_no_second_account_is_created(self, api_client, unverified_user):
+        api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        assert User.objects.filter(email=unverified_user.email).count() == 1
+
+    def test_the_details_are_replaced(self, api_client, unverified_user):
+        api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        unverified_user.refresh_from_db()
+        assert unverified_user.first_name == "Jane"
+        assert unverified_user.last_name == "Doe"
+        assert unverified_user.phone_number == "5551234567"
+
+    def test_the_old_password_stops_working(self, api_client, unverified_user, user_password):
+        taken_over = payload(
+            email=unverified_user.email,
+            password="BrandNewPass456!",
+            confirm_password="BrandNewPass456!",
+        )
+        api_client.post(reverse("register"), taken_over, format="json")
+
+        unverified_user.refresh_from_db()
+        assert unverified_user.check_password(user_password) is False
+        assert unverified_user.check_password("BrandNewPass456!") is True
+
+    def test_the_account_stays_unverified_and_inactive(self, api_client, unverified_user):
+        api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        unverified_user.refresh_from_db()
+        assert unverified_user.is_active is False
+        assert unverified_user.is_verified is False
+
+    def test_a_new_code_is_issued(self, api_client, unverified_user, block_outbound_email):
+        old = issue_code(EmailVerification, unverified_user)
+
+        api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        verification = EmailVerification.objects.get(user=unverified_user)
+        assert EmailVerification.objects.filter(user=unverified_user).count() == 1
+        assert verification.check_code(old) is False
+        assert block_outbound_email.called is True
+
+    def test_a_verified_account_is_never_taken_over(self, api_client, base_user, user_password):
+        response = api_client.post(reverse("register"), payload(email=base_user.email), format="json")
+
+        base_user.refresh_from_db()
+        assert response.status_code == 400
+        assert base_user.first_name != "Jane"
+        assert base_user.check_password(user_password) is True

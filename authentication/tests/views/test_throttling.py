@@ -1,9 +1,9 @@
 """
 Rate limits.
 
-Guardrail #2: these are the only thing standing between a public endpoint and someone
-guessing 6-digit codes or spraying passwords, so they are tested like any other
-security control.
+Guardrail #2: with `MAX_ATTEMPTS` on the code itself, these are what stand between a
+public endpoint and someone guessing 6-digit codes or spraying passwords, so they are
+tested like any other security control.
 
 Each test reads its limit from settings and sends one request too many, so raising a
 limit does not quietly slip past — it changes how many requests the test sends, while
@@ -25,6 +25,8 @@ RATES = {
     "code_request": "5/hour",
     "code_submit": "5/hour",
     "password_reset": "5/hour",
+    "email_change": "5/hour",
+    "account_deletion": "5/hour",
     "user_info": "60/minute",
 }
 
@@ -130,6 +132,28 @@ class TestAuthenticatedEndpoints:
 
         api_client.force_authenticate(user=second_user)
         assert api_client.get(reverse("me")).status_code == 200
+
+
+class TestAccountEndpoints:
+    def test_email_changes_are_throttled_per_user(self, auth_client, settings):
+        body = {"new_email": "taken@example.com", "password": "wrong"}
+        send = lambda: auth_client.post(reverse("change-email"), body, format="json")  # noqa: E731
+
+        assert exhaust(send, limit(settings, "email_change")) == 429
+
+    def test_request_and_confirm_share_one_bucket(self, auth_client, settings):
+        for _ in range(limit(settings, "email_change")):
+            auth_client.post(reverse("change-email"), {"new_email": "a@example.com"}, format="json")
+
+        response = auth_client.post(reverse("change-email-confirm"), {"code": "000000"}, format="json")
+
+        assert response.status_code == 429
+
+    def test_account_deletion_is_throttled_per_user(self, auth_client, settings):
+        body = {"email": "wrong@example.com", "password": "wrong"}
+        send = lambda: auth_client.post(reverse("delete-account"), body, format="json")  # noqa: E731
+
+        assert exhaust(send, limit(settings, "account_deletion")) == 429
 
 
 class TestGoogleThrottling:

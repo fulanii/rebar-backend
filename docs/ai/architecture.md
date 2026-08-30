@@ -18,7 +18,7 @@ config/urls.py               matches the path, hands off to an app's urls.py
 authentication/urls.py       matches the rest of the path, names a view
     │
     ▼
-authentication/auth.py       who is this? (JWT + suspension check)
+authentication/auth.py       who is this? (JWT + suspension + revocation checks)
     │
     ▼
 authentication/throttles.py  have they done this too often?
@@ -88,7 +88,7 @@ Four files in `config/settings/`. Each environment module starts with
 | Module | Used for | Notable |
 |---|---|---|
 | `base.py` | Shared by all. | Apps, DRF config, JWT lifetimes, throttle rates, logging. |
-| `dev.py` | Your machine. | `DEBUG=True`, SQLite with no setup, CORS wide open, **the API docs and Django admin are mounted here and nowhere else**. |
+| `dev.py` | Your machine. | `DEBUG=True`, SQLite with no setup, CORS wide open, and the only module that sets `ENABLE_API_DOCS` — **the API docs and Django admin are mounted here and nowhere else**. |
 | `staging.py` | A production rehearsal. | Postgres, Redis, HTTPS enforced. CI runs the tests against this. |
 | `prod.py` | Real traffic. | Same as staging plus HSTS. Missing env vars fail loudly at boot. |
 
@@ -107,15 +107,25 @@ Two tokens, and the difference matters:
 Rotation is on: every refresh issues a new refresh token and blacklists the old one.
 A stolen refresh token therefore stops working as soon as the real user refreshes.
 
-Suspension is checked in `authentication/auth.py`, on **every** request, because a
-JWT is stateless and would otherwise stay valid for its full 30 minutes after you
-suspend someone.
+A completed password reset calls `revoke_sessions(user)`, which signs out every device:
+outstanding refresh tokens are blacklisted, and `sessions_revoked_at` on the user row
+makes `authentication/auth.py` refuse access tokens issued before that moment. Both
+halves are needed — blacklisting alone leaves live access tokens working for up to 30
+minutes. Deleting an account revokes the same way before the row goes.
+
+Password *change* leaves other sessions alone: that person is signed in and gave the
+current password, so the sessions are theirs. Both paths email a notification.
+
+Suspension and revocation are both checked in `authentication/auth.py`, on **every**
+request, because a JWT is stateless and would otherwise stay valid for its full 30
+minutes after you suspend someone or end their sessions. Neither check costs a query:
+SimpleJWT has already loaded the user row by that point.
 
 ## Where state lives
 
 | Where | What | Survives a restart? |
 |---|---|---|
-| Database | Users, verification codes, reset codes, blacklisted tokens. | Yes |
+| Database | Users, verification codes (with their attempt counters), reset codes, pending email changes, blacklisted tokens. | Yes |
 | Cache | Rate-limit counters; the Google OAuth `state` and handoff code. | No |
 | Nowhere | Access tokens. They are self-describing and are not stored. | — |
 

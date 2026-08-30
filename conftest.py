@@ -6,6 +6,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from rest_framework.test import APIClient
+from rest_framework.throttling import SimpleRateThrottle
 
 User = get_user_model()
 
@@ -55,6 +56,8 @@ def email_configured(settings):
     settings.RESEND_API_KEY = "test-resend-key"
     settings.VERIFICATION_TEMPLATE_ID = "1"
     settings.PASSWORD_RESET_TEMPLATE_ID = "2"
+    settings.PASSWORD_CHANGED_TEMPLATE_ID = "3"
+    settings.EMAIL_CHANGE_TEMPLATE_ID = "4"
 
 
 @pytest.fixture(autouse=True)
@@ -131,3 +134,19 @@ def auth_client(api_client, base_user):
     """
     api_client.force_authenticate(user=base_user)
     return api_client
+
+
+@pytest.fixture
+def unlimited_requests(monkeypatch, settings):
+    """
+    Raise every rate limit out of the way for one test.
+
+    Only for tests of a control that sits *behind* the throttle -- the per-code attempt
+    counter, say, which needs more requests than one IP is ever allowed. The real rates
+    stay where they are; `tests/views/test_throttling.py` pins them.
+
+    `SimpleRateThrottle` reads the rates once at import, so overriding the setting is
+    not enough -- the class attribute is what every throttle actually consults.
+    """
+    rates = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
+    monkeypatch.setattr(SimpleRateThrottle, "THROTTLE_RATES", {scope: "1000/hour" for scope in rates})

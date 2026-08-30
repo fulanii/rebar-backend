@@ -151,7 +151,9 @@ class TestSessionList:
 ```
 
 Fixtures available from `conftest.py`: `api_client`, `auth_client`, `base_user`,
-`second_user`, `unverified_user`, `user_password`, `block_outbound_email`.
+`second_user`, `unverified_user`, `user_password`, `block_outbound_email`,
+`unlimited_requests` (lifts the rate limits for one test — only for testing something
+that sits behind a throttle).
 
 ---
 

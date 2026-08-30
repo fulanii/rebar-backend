@@ -2,7 +2,12 @@
 
 import pytest
 
-from authentication.utils import send_password_reset_email, send_verification_email
+from authentication.utils import (
+    send_email_change_email,
+    send_password_changed_email,
+    send_password_reset_email,
+    send_verification_email,
+)
 from authentication.utils.email import CODE_EXPIRY_MINUTES
 
 
@@ -12,6 +17,8 @@ def email_configured(settings):
     settings.RESEND_API_KEY = "resend-test-key"
     settings.VERIFICATION_TEMPLATE_ID = "3"
     settings.PASSWORD_RESET_TEMPLATE_ID = "4"
+    settings.PASSWORD_CHANGED_TEMPLATE_ID = "5"
+    settings.EMAIL_CHANGE_TEMPLATE_ID = "6"
     return settings
 
 
@@ -140,3 +147,38 @@ class TestSharedBehaviour:
 
         assert send_verification_email("jane@example.com", "Jane", "004821") is False
         assert not block_outbound_email.called
+
+
+class TestPasswordChangedEmail:
+    def test_uses_its_own_template(self, base_user, settings, block_outbound_email):
+        send_password_changed_email(base_user.email, base_user.first_name)
+
+        assert block_outbound_email.brevo_send.call_args.kwargs["template_id"] == int(
+            settings.PASSWORD_CHANGED_TEMPLATE_ID
+        )
+
+    def test_sends_the_first_name_and_no_code(self, base_user, block_outbound_email):
+        send_password_changed_email(base_user.email, base_user.first_name)
+
+        params = block_outbound_email.brevo_send.call_args.kwargs["params"]
+        assert params == {"FIRST_NAME": base_user.first_name}
+
+    def test_without_a_template_id_nothing_is_sent(self, base_user, settings, block_outbound_email):
+        settings.PASSWORD_CHANGED_TEMPLATE_ID = ""
+
+        assert send_password_changed_email(base_user.email, base_user.first_name) is False
+        assert block_outbound_email.called is False
+
+
+class TestEmailChangeEmail:
+    def test_uses_its_own_template(self, base_user, settings, block_outbound_email):
+        send_email_change_email("new@example.com", base_user.first_name, "123456")
+
+        assert block_outbound_email.brevo_send.call_args.kwargs["template_id"] == int(settings.EMAIL_CHANGE_TEMPLATE_ID)
+
+    def test_carries_the_code_and_expiry(self, base_user, block_outbound_email):
+        send_email_change_email("new@example.com", base_user.first_name, "123456")
+
+        params = block_outbound_email.brevo_send.call_args.kwargs["params"]
+        assert params["CODE"] == "123456"
+        assert params["EXPIRY_MINUTES"] == 15

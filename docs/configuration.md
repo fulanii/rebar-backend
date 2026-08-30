@@ -35,17 +35,15 @@ where, instead of holding it in your head or digging through a dashboard. When y
 deploy, copy from them into your host's environment variables; to run staging settings
 locally, copy what you need into `.env`.
 
-All three are gitignored. A separate `SECRET_KEY` per environment matters: sharing one
-means a development key that ends up in a screenshot or a pasted traceback can forge a
-session for any production account.
+All three are gitignored, so none of them can be committed. A separate `SECRET_KEY`
+per environment matters: a development key that ends up in a screenshot or a pasted
+traceback must not be able to forge a session for a production account.
 
 ### Environment variables beat the file
 
 A real environment variable always wins over `.env`. On a host like Railway you set
 values in a dashboard and ship no env file at all — better, since nothing sensitive
 touches the disk. A missing `.env` is not an error.
-
-All three are gitignored, so none of them can be committed.
 
 ---
 
@@ -159,6 +157,8 @@ Verification codes and password resets go through [Brevo](https://brevo.com) or
 | `RESEND_API_KEY` | Needed when the provider is `resend`. |
 | `VERIFICATION_TEMPLATE_ID` | The template for the signup code. |
 | `PASSWORD_RESET_TEMPLATE_ID` | The template for the password-reset code. |
+| `EMAIL_CHANGE_TEMPLATE_ID` | The template for the code confirming a new email address. |
+| `PASSWORD_CHANGED_TEMPLATE_ID` | The template telling someone their password just changed. |
 
 Without an API key, emails are skipped and logged as a warning.
 
@@ -166,15 +166,17 @@ Without an API key, emails are skipped and logged as a warning.
 non-numeric id under Brevo is refused with an error rather than sent — which is what
 catches a leftover Resend id after switching provider.
 
-**The copy and design of both emails live in the provider's dashboard, not in the
-code.** The backend sends a template id and three variables (`FIRST_NAME`, `CODE`,
-`EXPIRY_MINUTES`) and the provider renders the rest — so changing the wording is a
-dashboard edit, not a deploy. The variable names are identical on both providers, so
-switching does not mean rewriting templates.
+**The copy and design of every email live in the provider's dashboard, not in the
+code.** The backend sends a template id and its variables — `FIRST_NAME`, `CODE` and
+`EXPIRY_MINUTES` for the three that carry a code, `FIRST_NAME` alone for the
+password-changed notice — and the provider renders the rest. Changing the wording is a
+dashboard edit, not a deploy, and the variable names are identical on both providers,
+so switching does not mean rewriting templates.
 
-There is no fallback body. With no template id set, nothing is sent and an error is
-logged, which means **both templates must exist before anyone can register**. Building
-them takes a few minutes: [email-templates.md](email-templates.md).
+There is no fallback body: with no template id set, nothing is sent and an error is
+logged. **`VERIFICATION_TEMPLATE_ID` is the one that blocks signups** — without it a
+new account never receives its code. Building all four takes a few minutes:
+[email-templates.md](email-templates.md).
 
 Brevo's free tier allows 300 emails a day across unlimited sending domains; Resend's
 allows 100 a day on a single domain. That difference is why Brevo is the default.
@@ -266,5 +268,6 @@ more problems than it solves:
 | Access token lifetime | 30 minutes | Short by design. |
 | Refresh token lifetime | 7 days | |
 | Token rotation + blacklist | On | Turning it off removes real logout. |
+| `last_login` on every sign-in | On | `UPDATE_LAST_LOGIN`, plus the two views that issue tokens themselves. |
 | Rate limits | Per endpoint | See `DEFAULT_THROTTLE_RATES`. Read `docs/ai/guardrails.md` before changing one. |
-| API docs and Django admin | Dev only | Mounted in `config/urls.py` under the dev settings and nowhere else. |
+| API docs and Django admin | Dev only | Mounted in `config/urls.py` when `ENABLE_API_DOCS` is on, which only `dev.py` sets. |

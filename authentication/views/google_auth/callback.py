@@ -5,6 +5,7 @@ import secrets
 
 import requests
 from django.conf import settings
+from django.contrib.auth.models import update_last_login
 from django.core.cache import cache
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from google.auth.transport import requests as google_requests
@@ -131,6 +132,8 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
             payload.get("family_name", ""),
         )
         logger.info("event=google_oauth_success email=%s new_user=%s", user.email, created)
+
+        update_last_login(None, user)
 
         handoff_code = secrets.token_urlsafe(32)
         cache.set(f"{EXCHANGE_CACHE_PREFIX}{handoff_code}", issue_jwt_payload(user), EXCHANGE_TTL_SECONDS)

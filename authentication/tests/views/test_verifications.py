@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from authentication.models import EmailVerification
+from authentication.models.one_time_code import MAX_ATTEMPTS
 
 pytestmark = pytest.mark.django_db
 
@@ -97,6 +98,70 @@ class TestVerifyEmail:
         )
 
         assert response.status_code == 400
+
+
+class TestVerifyEmailAttemptLimit:
+    """
+    Guardrail: the per-IP throttle cannot see the same code being guessed from a
+    thousand addresses. The counter on the code itself can.
+    """
+
+    def submit(self, api_client, user, code):
+        return api_client.post(
+            reverse("verify-email"),
+            {"email": user.email, "code": code},
+            format="json",
+        )
+
+    def test_a_wrong_code_is_counted(self, api_client, unverified_user, pending_code, unlimited_requests):
+        self.submit(api_client, unverified_user, "000000")
+
+        assert EmailVerification.objects.get(user=unverified_user).attempts == 1
+
+    def test_the_code_survives_up_to_the_limit(self, api_client, unverified_user, pending_code, unlimited_requests):
+        for _ in range(MAX_ATTEMPTS - 1):
+            self.submit(api_client, unverified_user, "000000")
+
+        response = self.submit(api_client, unverified_user, pending_code)
+
+        assert response.status_code == 200
+
+    def test_the_code_dies_at_the_limit(self, api_client, unverified_user, pending_code, unlimited_requests):
+        for _ in range(MAX_ATTEMPTS):
+            assert self.submit(api_client, unverified_user, "000000").status_code == 400
+
+        response = self.submit(api_client, unverified_user, pending_code)
+
+        assert response.status_code == 400
+        unverified_user.refresh_from_db()
+        assert unverified_user.is_verified is False
+
+    def test_an_exhausted_code_looks_like_any_other_failure(
+        self, api_client, unverified_user, pending_code, unlimited_requests
+    ):
+        for _ in range(MAX_ATTEMPTS):
+            self.submit(api_client, unverified_user, "000000")
+
+        response = self.submit(api_client, unverified_user, pending_code)
+
+        assert response.data["detail"] == "Invalid or expired verification code."
+
+    def test_a_correct_code_never_counts_against_the_limit(
+        self, api_client, unverified_user, pending_code, unlimited_requests
+    ):
+        self.submit(api_client, unverified_user, pending_code)
+
+        assert EmailVerification.objects.get(user=unverified_user).attempts == 0
+
+    def test_resending_gives_the_user_a_fresh_five(self, api_client, unverified_user, pending_code, unlimited_requests):
+        for _ in range(MAX_ATTEMPTS):
+            self.submit(api_client, unverified_user, "000000")
+
+        api_client.post(reverse("resend-verification"), {"email": unverified_user.email}, format="json")
+
+        verification = EmailVerification.objects.get(user=unverified_user)
+        assert verification.attempts == 0
+        assert verification.is_valid is True
 
 
 class TestResendVerification:

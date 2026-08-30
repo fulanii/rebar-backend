@@ -74,7 +74,8 @@ DOMAIN                   bare domain, for the refresh cookie
 DB_NAME DB_USER DB_PASSWORD DB_HOST
 REDIS_URL                required — see below
 BREVO_API_KEY            or nobody can verify an email (or RESEND_API_KEY)
-VERIFICATION_TEMPLATE_ID and PASSWORD_RESET_TEMPLATE_ID
+VERIFICATION_TEMPLATE_ID  the other three template ids are needed for reset,
+                         email change and the password-changed notice
 ```
 
 Production deliberately fails at boot when one of these is missing, rather than

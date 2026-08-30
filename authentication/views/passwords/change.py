@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from authentication.serializers import DetailResponseSerializer, PasswordChangeSerializer
 from authentication.throttles import UserInfoRateThrottle
+from authentication.utils import send_password_changed_email
 
 logger = logging.getLogger(__name__)
 
@@ -93,9 +94,13 @@ class PasswordChangeView(APIView):
         ## Post-Request Flow
         1. The current password is verified against the stored hash.
         2. The new password is hashed and saved.
+        3. A notification email goes to the address on the account, so a change the
+           owner did not make is visible to them.
 
-        > **Note:** other sessions are **not** signed out. See the note on the reset
-        > endpoint above if you need that behaviour.
+        > **Note:** other sessions are **not** signed out, unlike a password reset.
+        > You are signed in and gave the current password, so the sessions are yours;
+        > a reset assumes the opposite. To sign them out here too, call
+        > `revoke_sessions(user)` from `authentication/utils/`.
         """
 
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
@@ -106,4 +111,7 @@ class PasswordChangeView(APIView):
         user.save(update_fields=["password"])
 
         logger.info("event=password_changed email=%s", user.email)
+
+        send_password_changed_email(user.email, user.first_name)
+
         return Response({"detail": "Password changed."}, status=status.HTTP_200_OK)

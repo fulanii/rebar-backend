@@ -42,11 +42,12 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ["email", "first_name", "last_name", "phone_number", "password", "confirm_password"]
+        extra_kwargs = {"email": {"validators": []}}
 
     def validate_email(self, value):
         email = value.strip().lower()
 
-        if CustomUser.objects.filter(email=email).exists():
+        if CustomUser.objects.filter(email=email, is_verified=True).exists():
             raise serializers.ValidationError("An account with this email already exists.")
 
         return email
@@ -71,10 +72,35 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        unverified = CustomUser.objects.filter(email=validated_data["email"], is_verified=False).first()
+
+        if unverified is not None:
+            return self.take_over(unverified, validated_data)
+
         try:
             return User.objects.create_user(**validated_data)
         except IntegrityError:
             raise serializers.ValidationError({"email": "An account with this email already exists."})
+
+    def take_over(self, user, validated_data):
+        """
+        Hand an unverified account to whoever just registered with its address.
+
+        Nobody ever proved they owned the address, so the row holds no claim on it --
+        see docs/ai/guardrails.md. Every field is overwritten and the old password is
+        discarded, so the previous registration keeps nothing at all.
+        """
+        password = validated_data.pop("password")
+
+        for field, value in validated_data.items():
+            setattr(user, field, value)
+
+        user.set_password(password)
+        user.is_active = False
+        user.auth_provider = CustomUser.AuthProvider.EMAIL
+        user.save()
+
+        return user
 
 
 class UserRegistrationResponseSerializer(serializers.Serializer):

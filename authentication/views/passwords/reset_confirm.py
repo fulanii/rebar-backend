@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from authentication.models import CustomUser, PasswordReset
 from authentication.serializers import DetailResponseSerializer, PasswordResetConfirmSerializer
 from authentication.throttles import PasswordResetRateThrottle
+from authentication.utils import revoke_sessions, send_password_changed_email
 
 from .shared import INVALID_CODE
 
@@ -105,12 +106,16 @@ class PasswordResetConfirmView(APIView):
         ## Post-Request Flow
         1. `is_valid` rejects a used or expired code before the hash is checked.
         2. The code is compared against the stored hash.
-        3. The code is burned so it cannot be replayed, then the new password is
+        3. A wrong code is counted. After 5 wrong guesses the code is burned and a
+           new one has to be requested, so the 5/hour IP limit is not the only thing
+           standing between an attacker and a million combinations.
+        4. The code is burned so it cannot be replayed, then the new password is
            hashed and saved.
-
-        > **Note:** existing refresh tokens are **not** revoked here. If you need a
-        > password reset to sign out every other device, blacklist the user's
-        > outstanding tokens at this point -- see `docs/ai/recipes/`.
+        5. Every session is revoked: outstanding refresh tokens are blacklisted, and
+           the account is stamped so that access tokens issued earlier are refused on
+           their next request. A reset usually means someone else is in the account;
+           leaving their session alive would defeat the point.
+        6. A notification email goes to the account's address.
         """
 
         serializer = PasswordResetConfirmSerializer(data=request.data)
@@ -122,7 +127,13 @@ class PasswordResetConfirmView(APIView):
         user = CustomUser.objects.filter(email=email, is_active=True).first()
         reset = PasswordReset.objects.filter(user=user).first() if user else None
 
-        if reset is None or not reset.is_valid or not reset.check_code(code):
+        if reset is None or not reset.is_valid:
+            logger.info("event=password_reset_failed email=%s", email)
+            return Response({"detail": INVALID_CODE}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not reset.check_code(code):
+            if reset.register_failure():
+                logger.info("event=password_reset_code_exhausted email=%s", email)
             logger.info("event=password_reset_failed email=%s", email)
             return Response({"detail": INVALID_CODE}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -130,8 +141,12 @@ class PasswordResetConfirmView(APIView):
             reset.mark_used()
             user.set_password(serializer.validated_data["new_password"])
             user.save(update_fields=["password"])
+            revoked = revoke_sessions(user)
 
-        logger.info("event=password_reset_completed email=%s", email)
+        logger.info("event=password_reset_completed email=%s tokens_revoked=%s", email, revoked)
+
+        send_password_changed_email(user.email, user.first_name)
+
         return Response(
             {"detail": "Password updated. You can now sign in with your new password."},
             status=status.HTTP_200_OK,

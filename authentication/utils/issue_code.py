@@ -23,6 +23,7 @@ def issue_code(model, user):
             "code": hashed.code,
             "used": False,
             "used_at": None,
+            "attempts": 0,
             "expires_at": default_expiry(),
         },
     )

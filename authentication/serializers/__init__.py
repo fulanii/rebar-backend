@@ -1,6 +1,8 @@
 """Serializer exports. Import from the package, not from the module files."""
 
+from .account_deletion import AccountDeletionSerializer
 from .common import DetailResponseSerializer
+from .emails import EmailChangeConfirmResponseSerializer, EmailChangeConfirmSerializer, EmailChangeRequestSerializer
 from .google_auth import GoogleOAuthExchangeRequestSerializer, GoogleOAuthExchangeResponseSerializer
 from .jwt_tokens import TokenObtainPairResponseSerializer, TokenRefreshResponseSerializer
 from .passwords import PasswordChangeSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
@@ -10,7 +12,11 @@ from .user_registration import UserRegistrationRequestSerializer, UserRegistrati
 from .verifications import EmailVerificationRequestSerializer, ResendVerificationRequestSerializer
 
 __all__ = [
+    "AccountDeletionSerializer",
     "DetailResponseSerializer",
+    "EmailChangeRequestSerializer",
+    "EmailChangeConfirmSerializer",
+    "EmailChangeConfirmResponseSerializer",
     "EmailVerificationRequestSerializer",
     "ResendVerificationRequestSerializer",
     "GoogleOAuthExchangeRequestSerializer",

@@ -7,7 +7,10 @@ What is built, what is planned, and what is left out on purpose.
 Authentication, complete and tested: accounts, 6-digit email verification, password
 reset and change, Google sign-in, JWT sessions with an httpOnly refresh cookie,
 account suspension, per-endpoint rate limits, and a choice of Brevo or Resend for
-email. The [readme](../readme.md) has the summary table.
+email, plus email-address changes and account deletion. Codes die after five wrong
+guesses, a completed reset signs out every device including live access tokens, and an
+unverified address cannot be squatted. [endpoints.md](endpoints.md) lists every route;
+the [readme](../readme.md) has the summary table.
 
 ## Next
 
@@ -21,6 +24,8 @@ in roughly the order people need them:
 | **Admin back-office** | A permissioned API over the domain services — user lookup, suspension, support actions — with roles via Django groups. |
 | **File uploads** | S3-compatible object storage with presigned URLs. |
 | **Phone verification** | SMS codes. The `phone_number` field is already collected and validated. |
+| **Two-factor authentication** | TOTP, and a "sign out every device" button — the machinery exists (`revoke_sessions`), it just has no endpoint. |
+| **Per-account login limits** | The throttles are IP-keyed, so a spray from many addresses against one account is unlimited. [The recipe](ai/recipes/add-an-account-keyed-throttle.md) closes it. |
 
 ## Deliberately left out
 

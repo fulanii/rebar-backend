@@ -31,5 +31,13 @@ class PasswordResetRateThrottle(AnonRateThrottle):
     scope = "password_reset"
 
 
+class EmailChangeRateThrottle(UserRateThrottle):
+    scope = "email_change"
+
+
+class AccountDeletionRateThrottle(UserRateThrottle):
+    scope = "account_deletion"
+
+
 class UserInfoRateThrottle(UserRateThrottle):
     scope = "user_info"

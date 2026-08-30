@@ -58,7 +58,11 @@ class UserRegistrationView(APIView):
         ### email
         - Required, valid email format.
         - Lowercased and stripped before the uniqueness check.
-        - Must not already be registered.
+        - Must not belong to a **verified** account.
+        - An **unverified** account with this address is taken over: its details and
+          password are replaced by the ones sent here and a new code is emailed.
+          Nobody proved they owned that address, so nobody can hold it hostage by
+          registering it and never verifying.
 
         ### first_name / last_name
         - Required, at least 2 characters after trimming.
@@ -132,7 +136,9 @@ class UserRegistrationView(APIView):
         ---
 
         ## Post-Request Flow
-        1. Serializer validates every field and creates the user with a hashed password.
+        1. Serializer validates every field and creates the user with a hashed
+           password, or overwrites an existing unverified account with the same
+           address.
         2. A cryptographically strong 6-digit code is generated.
         3. `EmailVerification` is written with `update_or_create`, so a user always has
            exactly one live code -- issuing a new one invalidates any previous code.

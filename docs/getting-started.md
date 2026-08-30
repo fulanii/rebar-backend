@@ -66,11 +66,11 @@ The app runs without any of these; each one switches on a feature.
 
 | To get | Set |
 |---|---|
-| Verification and password-reset emails | `EMAIL_PROVIDER` (`brevo` or `resend`), that provider's API key, and the two template ids — see [docs/email-templates.md](email-templates.md) |
+| Emails — verification, password reset, email change, password-changed notice | `EMAIL_PROVIDER` (`brevo` or `resend`), that provider's API key, and the four template ids — see [email-templates.md](email-templates.md) |
 | Sign in with Google | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — see [docs/configuration.md](configuration.md) |
 
-**Nobody can finish registering until the email templates exist**, since verification
-is part of signing up. Do that before your first real user.
+**Nobody can finish registering until `VERIFICATION_TEMPLATE_ID` exists**, since
+verification is part of signing up. Build the other three before your first real user.
 
 ## 5. Start your repository
 
@@ -112,9 +112,9 @@ settings, and how to recover if you commit to `main` by accident.
 Most tools read [`CLAUDE.md`](../CLAUDE.md) or [`AGENTS.md`](../AGENTS.md) automatically, so
 usually there is nothing to do. If yours does not, start a session with:
 
-> Read `CLAUDE.md`, `ai/guardrails.md`, `ai/architecture.md` and
-> `ai/conventions.md` before making any changes. Follow the recipes in
-> `ai/recipes/` when adding an endpoint, a model or an app.
+> Read `CLAUDE.md`, `docs/ai/guardrails.md`, `docs/ai/architecture.md` and
+> `docs/ai/conventions.md` before making any changes. Follow the recipes in
+> `docs/ai/recipes/` when adding an endpoint, a model or an app.
 
 Read [`ai/guardrails.md`](ai/guardrails.md) yourself too, even if you never
 open the code. It is short, and it is the list of things that quietly break this
@@ -148,6 +148,7 @@ Adding things:
 | A model | [ai/recipes/add-a-model.md](ai/recipes/add-a-model.md) |
 | A whole app | [ai/recipes/add-an-app.md](ai/recipes/add-an-app.md) |
 | Another email | [ai/recipes/send-an-email.md](ai/recipes/send-an-email.md) |
+| Anything else | [ai/recipes/](ai/recipes/) — seven of them |
 
 ---
 
@@ -155,8 +156,9 @@ Adding things:
 
 | | |
 |---|---|
+| [endpoints.md](endpoints.md) | Every route the backend serves |
 | [configuration.md](configuration.md) | Every environment variable |
-| [email-templates.md](email-templates.md) | Building the two email templates |
+| [email-templates.md](email-templates.md) | Building the four email templates |
 | [git-workflow.md](git-workflow.md) | Branching and pull requests |
 | [deployment.md](deployment.md) | Shipping it |
 | [ai/guardrails.md](ai/guardrails.md) | What quietly breaks this project |

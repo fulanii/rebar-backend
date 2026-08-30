@@ -68,6 +68,12 @@ The list of refresh tokens that have been revoked. What makes logout real: witho
 it, clearing the cookie only removes the browser's copy while the token itself stays
 valid.
 
+### Session revocation
+Signing someone out of *everything*, which takes two steps because the two token
+types are stored differently: refresh tokens are rows, so they are blacklisted; access
+tokens are stored nowhere, so the user row records the moment of revocation and every
+older token is refused. A completed password reset does both.
+
 ### httpOnly cookie
 A cookie the browser will not let JavaScript read. It is still sent with requests
 automatically — the browser can use it, your code cannot. That is what protects the
@@ -101,8 +107,9 @@ Random data mixed into each hash so that two people with the same password get
 different stored values. Django does this for you.
 
 ### OTP / one-time code
-The 6-digit number emailed to verify an address or reset a password. Single-use, and
-expires after 15 minutes.
+The 6-digit number emailed to verify an address, reset a password or confirm a new
+email address. Single-use, expires after 15 minutes, and dies after five wrong
+guesses — the throttle limits one attacker, the counter limits all of them at once.
 
 ### OAuth
 The protocol behind "Sign in with Google". Google confirms who the user is and tells

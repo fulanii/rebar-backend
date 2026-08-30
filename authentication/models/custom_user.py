@@ -28,12 +28,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    class AccountStatus(models.TextChoices):
-        ACTIVE = "active", "Active"
-        SUSPENDED = "suspended", "Suspended"
-        DISABLED = "disabled", "Disabled"
-        PENDING_VERIFICATION = "pending_verification", "Pending Verification"
-
     class AuthProvider(models.TextChoices):
         EMAIL = "email", "Email"
         GOOGLE = "google", "Google"
@@ -44,6 +38,8 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=150, blank=False)
     last_name = models.CharField(max_length=150, blank=False)
     phone_number = models.CharField(max_length=15, blank=True, default="")
+
+    sessions_revoked_at = models.DateTimeField(null=True, blank=True)
 
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
