@@ -109,7 +109,7 @@ anyone:
 
 **Give it a star** — it costs you a click and it genuinely helps other people find it.
 
-I'm **Yassine**, a backend engineer, and I'm **open to backend work** — Django/DRF
+I'm **Yassine**, a backend engineer, and I'm **open to backend work** — Django/DRF/FastAPI
 APIs, Stripe and payments, third-party integrations, and taking a prototype the rest
 of the way to production.
 
