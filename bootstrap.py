@@ -7,7 +7,7 @@ Turn this boilerplate into your project.
 Creates .env, .env.staging and .env.prod with fresh secret keys and removes the
 .example templates they replace, clears the boilerplate's migrations, sets the API
 documentation title, gitignores the boilerplate's own files (docs/ and this script),
-and starts a new git repository.
+starts a new git repository, and renames the project folder to your project name.
 
 Run it once, immediately after cloning.
 
@@ -154,6 +154,35 @@ def reset_git():
         return False
 
 
+def rename_root(name):
+    """
+    Rename the project directory itself, and return its new path.
+
+    Runs last, because every step before it writes through the old path. Your shell
+    is still sitting in the directory under its old name afterwards, which no longer
+    exists -- `cd` to the printed path before running anything else.
+
+    Returns None when the folder is already named that, when something else there
+    already has the name, or when the rename is refused.
+    """
+    if ROOT.name == name:
+        return None
+
+    target = ROOT.parent / name
+
+    if target.exists():
+        print(f"  warning: {target.name}/ already exists next door, leaving the folder name alone")
+        return None
+
+    try:
+        ROOT.rename(target)
+    except OSError as exc:
+        print(f"  warning: could not rename the folder ({exc.strerror}) -- rename it yourself")
+        return None
+
+    return target
+
+
 def main():
     parser = argparse.ArgumentParser(description="Turn this boilerplate into your project.")
     parser.add_argument("name", help="your project name, e.g. my_project")
@@ -185,11 +214,23 @@ def main():
 
     MARKER.write_text(f"{args.name}\n", encoding="utf-8")
 
-    print(
-        """
-  Done. Next:
+    # Last: everything above writes through the old path.
+    renamed = rename_root(args.name)
+    if renamed:
+        print(f"  renamed the folder to {renamed.name}/")
 
-    python -m venv .venv && source .venv/bin/activate
+    if renamed:
+        intro = "Done. Your shell is still in the old folder name, so start with the cd:"
+        first_step = f"cd ../{renamed.name}\n    "
+    else:
+        intro = "Done. Next:"
+        first_step = ""
+
+    print(
+        f"""
+  {intro}
+
+    {first_step}python -m venv .venv && source .venv/bin/activate
     pip install -r requirements-dev.txt
     python manage.py makemigrations
     python manage.py migrate

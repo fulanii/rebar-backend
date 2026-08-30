@@ -37,8 +37,9 @@ on purpose.
 ## Quickstart
 
 ```bash
-git clone <this repo> my-project && cd my-project
+git clone <this repo> && cd backend-saas-boilerplate
 python bootstrap.py my_project
+cd ../my_project          # bootstrap renames the folder
 
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt

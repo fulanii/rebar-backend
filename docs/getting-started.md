@@ -6,15 +6,26 @@ before it worked.
 ## 1. Clone it and make it yours
 
 ```bash
-git clone <this repo> my-project && cd my-project
+git clone <this repo> && cd backend-saas-boilerplate
 python bootstrap.py my_project
+cd ../my_project
 ```
 
-`bootstrap.py` writes `.env`, `.env.staging` and `.env.prod` — each with its own
-generated `SECRET_KEY` — clears the boilerplate's migrations, titles the API docs
-after your project, gitignores the boilerplate's own files (`docs/` and the script
-itself, both of which stay on disk), and replaces this repo's git history with a fresh
-one, so your first commit is genuinely your first commit.
+That last `cd` is not optional: `bootstrap.py` renames the folder to your project
+name as its final step, so your shell is left pointing at a directory that no longer
+exists under that name.
+
+`bootstrap.py` does everything that makes this yours rather than mine:
+
+- writes `.env`, `.env.staging` and `.env.prod`, each with its own generated
+  `SECRET_KEY`, and deletes the `.example` templates they replace
+- clears the boilerplate's migrations
+- titles the API docs after your project
+- gitignores the boilerplate's own files — `docs/` and the script itself, both of
+  which stay on disk
+- replaces this repo's git history with a fresh one, so your first commit is
+  genuinely your first commit
+- renames the folder to your project name
 
 Run it once, before anything else. It refuses to run twice.
 
