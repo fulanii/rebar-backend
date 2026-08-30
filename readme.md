@@ -8,25 +8,47 @@ Built to be worked on **through AI tools**. The structure is regular, the rules 
 written down in [`docs/ai/`](docs/ai/), and [`CLAUDE.md`](CLAUDE.md) /
 [`AGENTS.md`](AGENTS.md) point your assistant at them automatically.
 
-## What you get
+## Status
 
-- **Email + password accounts** — registration collecting name, email and US phone.
-- **6-digit email verification**, hashed at rest, single-use, 15-minute expiry, with
-  a resend endpoint that invalidates the previous code.
-- **Password reset** by emailed code, and password change while signed in.
-- **Brevo or Resend** for email — one env var picks the provider, templates live in
-  their dashboard so copy changes need no deploy.
-- **Sign in with Google** — the server-side redirect flow, which works on mobile
-  where Google's popup button does not.
-- **JWT sessions done properly** — short-lived access token in the body, refresh
-  token in an httpOnly cookie, rotation with blacklisting, real logout.
-- **Account suspension** that takes effect on the very next request.
-- **Per-endpoint rate limits** on everything unauthenticated.
-- **Interactive API docs** at `/docs/`, generated from the code.
-- **A test suite** covering the failure paths, not just the happy ones.
+**Authentication is complete** — 260 tests, all green, covering the failure paths as
+well as the happy ones.
 
-Deliberately **not** included: billing, background jobs, an admin panel, file
-uploads, SMS. They are the next layers, and every project wants them differently.
+### Shipped
+
+| | |
+|---|---|
+| **Accounts** | Register with name, email, US phone and password. Read your own profile. |
+| **Email verification** | 6-digit code, hashed at rest, single-use, 15-minute expiry. Resending invalidates the previous code. |
+| **Passwords** | Reset by emailed code; change while signed in, current password required. |
+| **Google sign-in** | Server-side redirect flow. Works on mobile, where the popup button does not. |
+| **Sessions** | Access token in the body, refresh token in an httpOnly cookie, rotation with blacklisting, real logout. |
+| **Suspension** | Enforced on every request, not just at login. |
+| **Rate limits** | Per endpoint, on everything unauthenticated. |
+| **Email delivery** | Brevo or Resend, chosen by one env var. Templates live in their dashboard. |
+| **API reference** | Swagger at `/docs/`, generated from the code, development only. |
+| **Project setup** | Four settings modules, `bootstrap.py`, CI, pre-commit, and the `docs/ai/` rule set. |
+
+### Next
+
+Nothing below is started. They are the layers most projects reach for after accounts,
+in roughly the order people need them:
+
+| | |
+|---|---|
+| **Billing** | Stripe subscriptions — plans, checkout, customer portal, webhooks, plan changes, and a permission class for gating paid features. |
+| **Background jobs** | Celery and a broker, so email and other slow work leave the request cycle. |
+| **Admin back-office** | A permissioned API over the domain services — user lookup, suspension, support actions — with roles via Django groups. |
+| **File uploads** | S3-compatible object storage with presigned URLs. |
+| **Phone verification** | SMS codes. The `phone_number` field is already collected and validated. |
+
+### Deliberately left out
+
+- **A profile-update endpoint.** Which fields are editable is a product decision, and
+  the wrong default is worse than none. [The recipe](docs/ai/recipes/add-an-endpoint.md)
+  walks through adding one.
+- **More social providers.** Google is wired end to end and is the pattern to copy.
+- **Docker.** The target platforms build from the repo; see
+  [docs/deployment.md](docs/deployment.md).
 
 ---
 
@@ -41,8 +63,9 @@ python bootstrap.py my_project
 
 `bootstrap.py` writes `.env`, `.env.staging` and `.env.prod` — each with its own
 generated `SECRET_KEY` — clears the boilerplate's migrations, titles the API docs
-after your project, and replaces this repo's git history with a fresh one, so your
-first commit is genuinely your first commit.
+after your project, gitignores the boilerplate's own files (`docs/` and the script
+itself, both of which stay on disk), and replaces this repo's git history with a fresh
+one, so your first commit is genuinely your first commit.
 
 Run it once, before anything else. It refuses to run twice.
 
@@ -150,6 +173,7 @@ Add your own app beside `authentication/`:
 | GET | `/auth/google/login/` | Start Google sign-in (navigate, don't fetch) |
 | GET | `/auth/google/callback/` | Google returns here |
 | POST | `/auth/google/exchange/` | Handoff code → tokens |
+| POST | `/token/` | Standard SimpleJWT token pair; prefer `/auth/login/` |
 | POST | `/token/refresh/` | New access token from the cookie |
 | POST | `/token/blacklist/` | Sign out |
 
