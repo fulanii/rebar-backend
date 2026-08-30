@@ -2,12 +2,17 @@
 """
 Turn this boilerplate into your project.
 
-    python bootstrap.py my_project
+    python backend-saas-boilerplate/bootstrap.py my_saas
+
+Run it from the folder above, not from inside: the last thing it does is rename the
+folder, and a shell standing in a renamed folder is left pointing at nothing.
 
 Creates .env, .env.staging and .env.prod with fresh secret keys and removes the
 .example templates they replace, clears the boilerplate's migrations, sets the API
-documentation title, gitignores the boilerplate's docs, starts a new git repository,
-renames the project folder to your project name, and deletes itself.
+documentation title, gitignores the boilerplate's docs, deletes the boilerplate's git
+history, renames the project folder to your project name, and deletes itself.
+
+It does not run `git init` -- that first commit is yours to make.
 
 Run it once, immediately after cloning.
 
@@ -17,12 +22,12 @@ Standard library only, so it runs before you have installed anything.
 import argparse
 import secrets
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 MARKER = ROOT / ".bootstrapped"
+STARTED_IN = Path.cwd().resolve()
 
 
 def fail(message):
@@ -137,18 +142,20 @@ def clear_migrations():
     return removed
 
 
-def reset_git():
-    """Replace the boilerplate's history so your first commit is your own."""
-    git_dir = ROOT / ".git"
-    if git_dir.exists():
-        shutil.rmtree(git_dir)
+def remove_git():
+    """
+    Delete the boilerplate's history, leaving the folder with no repository at all.
 
-    try:
-        subprocess.run(["git", "init", "-q"], cwd=ROOT, check=True)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        print("  warning: could not run `git init` -- run it yourself")
+    Your project is not a fork of mine and its history should not start as one. Run
+    `git init` yourself when you are ready -- the first commit is then genuinely yours,
+    made when you choose and with the name and email you meant to use.
+    """
+    git_dir = ROOT / ".git"
+    if not git_dir.exists():
         return False
+
+    shutil.rmtree(git_dir)
+    return True
 
 
 def clean_up_self():
@@ -173,9 +180,7 @@ def rename_root(name):
     """
     Rename the project directory itself, and return its new path.
 
-    Runs last, because every step before it writes through the old path. Your shell
-    is still sitting in the directory under its old name afterwards, which no longer
-    exists -- `cd` to the printed path before running anything else.
+    Runs last, because every step before it writes through the old path.
 
     Returns None when the folder is already named that, when something else there
     already has the name, or when the rename is refused.
@@ -196,6 +201,25 @@ def rename_root(name):
         return None
 
     return target
+
+
+def cd_into(project):
+    """
+    The `cd` that lands the shell in the finished project, or "" if it is already there.
+
+    A shell that was sitting inside the folder when it was renamed is now pointing at a
+    path that no longer exists, so it has to climb out and back in. A shell that ran the
+    script from outside -- `python backend-saas-boilerplate/bootstrap.py my_saas` -- just
+    walks in.
+    """
+    if project == STARTED_IN:
+        return ""
+    if STARTED_IN == ROOT:
+        return f"cd ../{project.name}"
+    try:
+        return f"cd {project.relative_to(STARTED_IN)}"
+    except ValueError:
+        return f"cd {project}"
 
 
 def main():
@@ -229,8 +253,8 @@ def main():
     rewrite_titles(args.name)
     print(f"  set the API documentation title to '{title_from(args.name)} API'")
 
-    if reset_git():
-        print("  replaced the boilerplate's git history with a fresh repository")
+    if remove_git():
+        print("  deleted the boilerplate's git history -- run `git init` when you are ready")
 
     if clean_up_self():
         print("  deleted bootstrap.py and its marker -- there is nothing left to run twice")
@@ -240,16 +264,12 @@ def main():
     if renamed:
         print(f"  renamed the folder to {renamed.name}/")
 
-    if renamed:
-        intro = "Done. Your shell is still in the old folder name, so start with the cd:"
-        first_step = f"cd ../{renamed.name}\n    "
-    else:
-        intro = "Done. Next:"
-        first_step = ""
+    step = cd_into(renamed or ROOT)
+    first_step = f"{step}\n    " if step else ""
 
     print(
         f"""
-  {intro}
+  Done. Next:
 
     {first_step}python -m venv .venv && source .venv/bin/activate
     pip install -r requirements-dev.txt
@@ -262,6 +282,9 @@ def main():
   .env is the only file the app loads. .env.staging and .env.prod are yours to
   fill in and copy from -- switch environment by changing DJANGO_SETTINGS_MODULE
   inside .env, or set the values in your host's dashboard.
+
+  This folder is no longer a git repository. Once the tests are green, `git init`
+  and make the first commit your own -- docs/getting-started.md walks through it.
 
   Configuration:  docs/configuration.md
   Deployment:     docs/deployment.md

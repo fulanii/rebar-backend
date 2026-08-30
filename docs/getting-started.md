@@ -6,14 +6,15 @@ before it worked.
 ## 1. Clone it and make it yours
 
 ```bash
-git clone <this repo> && cd backend-saas-boilerplate
-python bootstrap.py my_project
-cd ../my_project
+git clone <this repo>
+python backend-saas-boilerplate/bootstrap.py my_saas
+cd my_saas
 ```
 
-That last `cd` is not optional: `bootstrap.py` renames the folder to your project
-name as its final step, so your shell is left pointing at a directory that no longer
-exists under that name.
+Run it from *outside* the folder, as above. Renaming the folder is the last thing
+`bootstrap.py` does, and a shell sitting inside a folder that gets renamed is left
+pointing at a path that no longer exists — staying outside means you simply walk in.
+It prints the right `cd` either way.
 
 `bootstrap.py` does everything that makes this yours rather than mine:
 
@@ -23,10 +24,13 @@ exists under that name.
 - titles the API docs after your project
 - gitignores `docs/` — the boilerplate's own documentation, which stays on disk for
   you and your AI tools to read
-- replaces this repo's git history with a fresh one, so your first commit is
-  genuinely your first commit
+- deletes this repo's git history, leaving you with no repository at all
 - renames the folder to your project name
 - deletes itself
+
+It stops short of `git init` on purpose. Starting the repository is step 5, once the
+project runs and the tests are green — so your first commit is one you chose to make,
+under the git identity you meant to use, of a project you have seen working.
 
 Run it once, before anything else. It cannot run twice — the last thing it does is
 remove itself, so what you are left with is your project and nothing of mine.
@@ -68,9 +72,13 @@ The app runs without any of these; each one switches on a feature.
 **Nobody can finish registering until the email templates exist**, since verification
 is part of signing up. Do that before your first real user.
 
-## 5. Set up your branches
+## 5. Start your repository
+
+`bootstrap.py` deleted the boilerplate's history and did not start a new one, so this
+folder is not yet a git repository. Make it yours:
 
 ```bash
+git init
 git add -A && git commit -m "Initial commit"
 git branch -M main
 git checkout -b staging
