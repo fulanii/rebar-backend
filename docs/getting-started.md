@@ -21,13 +21,15 @@ exists under that name.
   `SECRET_KEY`, and deletes the `.example` templates they replace
 - clears the boilerplate's migrations
 - titles the API docs after your project
-- gitignores the boilerplate's own files — `docs/` and the script itself, both of
-  which stay on disk
+- gitignores `docs/` — the boilerplate's own documentation, which stays on disk for
+  you and your AI tools to read
 - replaces this repo's git history with a fresh one, so your first commit is
   genuinely your first commit
 - renames the folder to your project name
+- deletes itself
 
-Run it once, before anything else. It refuses to run twice.
+Run it once, before anything else. It cannot run twice — the last thing it does is
+remove itself, so what you are left with is your project and nothing of mine.
 
 ## 2. Install and run
 

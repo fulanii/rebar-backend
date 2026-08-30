@@ -6,8 +6,8 @@ Turn this boilerplate into your project.
 
 Creates .env, .env.staging and .env.prod with fresh secret keys and removes the
 .example templates they replace, clears the boilerplate's migrations, sets the API
-documentation title, gitignores the boilerplate's own files (docs/ and this script),
-starts a new git repository, and renames the project folder to your project name.
+documentation title, gitignores the boilerplate's docs, starts a new git repository,
+renames the project folder to your project name, and deletes itself.
 
 Run it once, immediately after cloning.
 
@@ -98,13 +98,12 @@ def write_env_files():
 
 def ignore_boilerplate_files():
     """
-    Keep the boilerplate's own files out of your repository.
+    Keep the boilerplate's own documentation out of your repository.
 
-    `docs/` is the boilerplate's documentation and this script has already done its
-    one job. Both stay on disk -- you and your AI tools still read the docs, and the
-    script is still there if you need it -- they simply never enter your history.
+    `docs/` stays on disk -- you and your AI tools still read it -- it simply never
+    enters your history.
 
-    Delete these lines from .gitignore if you would rather your team had them too.
+    Delete the line from .gitignore if you would rather your team had it too.
     """
     gitignore = ROOT / ".gitignore"
 
@@ -114,17 +113,15 @@ def ignore_boilerplate_files():
 
     text = gitignore.read_text(encoding="utf-8")
     present = {line.strip() for line in text.splitlines()}
-    missing = [entry for entry in ("docs/", "bootstrap.py") if entry not in present]
 
-    if not missing:
+    if "docs/" in present:
         return []
 
-    added = "\n".join(missing)
     gitignore.write_text(
-        f"{text.rstrip()}\n\n# Boilerplate's own files: yours to read, not to ship\n{added}\n",
+        f"{text.rstrip()}\n\n# Boilerplate's own docs: yours to read, not to ship\ndocs/\n",
         encoding="utf-8",
     )
-    return missing
+    return ["docs/"]
 
 
 def clear_migrations():
@@ -152,6 +149,24 @@ def reset_git():
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("  warning: could not run `git init` -- run it yourself")
         return False
+
+
+def clean_up_self():
+    """
+    Remove this script and its marker, now that both have done their one job.
+
+    Runs before the folder rename, while these paths still resolve. Deleting a running
+    script is safe -- Python has already read it -- and it is the last thing left that
+    belongs to the boilerplate rather than to you.
+    """
+    removed = []
+    for path in (MARKER, Path(__file__).resolve()):
+        try:
+            path.unlink()
+            removed.append(path.name)
+        except OSError as exc:
+            print(f"  warning: could not delete {path.name} ({exc.strerror}) -- delete it yourself")
+    return removed
 
 
 def rename_root(name):
@@ -189,9 +204,14 @@ def main():
     args = parser.parse_args()
 
     if MARKER.exists():
-        fail("this project has already been bootstrapped.\n  Delete .bootstrapped to force it.")
+        fail(
+            "an earlier run stopped partway -- .bootstrapped is still here.\n"
+            "  Check what it left behind, then delete .bootstrapped and run this again."
+        )
 
     print(f"\n  Setting up '{args.name}'\n")
+
+    MARKER.write_text(f"{args.name}\n", encoding="utf-8")
 
     created, removed = write_env_files()
     if created:
@@ -212,7 +232,8 @@ def main():
     if reset_git():
         print("  replaced the boilerplate's git history with a fresh repository")
 
-    MARKER.write_text(f"{args.name}\n", encoding="utf-8")
+    if clean_up_self():
+        print("  deleted bootstrap.py and its marker -- there is nothing left to run twice")
 
     # Last: everything above writes through the old path.
     renamed = rename_root(args.name)

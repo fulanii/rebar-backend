@@ -37,5 +37,5 @@ htmlcov/
 # macOS
 .DS_Store
 
-# Written by bootstrap.py so it refuses to run twice
+# Written by bootstrap.py while it runs, and deleted when it finishes
 .bootstrapped
