@@ -51,6 +51,10 @@ class GoogleOAuthLoginView(BrowserOAuthErrorMixin, APIView):
         ### 429 Too Many Requests
         Redirects to `FRONTEND_URL/login?error=google_rate_limit` rather than
         returning JSON, because this is a browser navigation.
+
+        `/login` is a **string literal** in `shared.py`, not a setting -- your frontend
+        must serve that route. See `GoogleOAuthCallbackView` for the full list of
+        frontend paths this flow depends on.
         """
 
         state = secrets.token_urlsafe(32)

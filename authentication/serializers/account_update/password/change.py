@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from ..validators import validate_password_strength
+from ...validators import validate_password_strength
 
 
 class PasswordChangeSerializer(serializers.Serializer):

@@ -9,8 +9,9 @@ reset and change, Google sign-in, JWT sessions with an httpOnly refresh cookie,
 account suspension, per-endpoint rate limits, and a choice of Brevo or Resend for
 email, plus email-address changes and account deletion. Codes die after five wrong
 guesses, a completed reset signs out every device including live access tokens, and an
-unverified address cannot be squatted. [endpoints.md](endpoints.md) lists every route;
-the [readme](../readme.md) has the summary table.
+unverified address cannot be squatted. Every email leaves the request cycle through
+Celery. [endpoints.md](endpoints.md) lists every route; the [readme](../readme.md) has
+the summary table.
 
 ## Next
 
@@ -20,7 +21,6 @@ in roughly the order people need them:
 | | |
 |---|---|
 | **Billing** | Stripe subscriptions — plans, checkout, customer portal, webhooks, plan changes, and a permission class for gating paid features. |
-| **Background jobs** | Celery and a broker, so email and other slow work leave the request cycle. |
 | **Admin back-office** | A permissioned API over the domain services — user lookup, suspension, support actions — with roles via Django groups. |
 | **File uploads** | S3-compatible object storage with presigned URLs. |
 | **Phone verification** | SMS codes. The `phone_number` field is already collected and validated. |

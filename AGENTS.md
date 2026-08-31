@@ -26,5 +26,6 @@ every term used above in plain English.
   access tokens — via `revoke_sessions()`. A password change deliberately does not.
 - Every view method needs a docstring; a test enforces it.
 - Secrets live in `.env`, never in code.
+- Email is queued to Celery, never sent in the request. Tasks take ids, not objects.
 - Do not add explanatory comments — reasoning goes in `docs/`, not above the line.
 - Never commit or push to `main` or `staging`. Branch, push, open a pull request.

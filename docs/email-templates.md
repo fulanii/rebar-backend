@@ -12,6 +12,10 @@ provider  ->  renders and sends
 Changing "Welcome, Jane" to "Hi Jane" is an edit in a dashboard, not a code change, a
 pull request and a deploy. Non-technical people can own the copy.
 
+Nothing here happens inside the request. Endpoints **queue** the email and return; a
+Celery worker calls the provider and retries if it fails. See
+[background-jobs.md](background-jobs.md).
+
 ## Choosing a provider
 
 Two are supported. Pick one with `EMAIL_PROVIDER` in `.env`:

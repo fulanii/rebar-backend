@@ -1,7 +1,7 @@
 # Working in this codebase
 
 Django REST Framework backend. Email-first JWT authentication with Google OAuth.
-Python 3.13, Django 6.1, DRF 3.18, SimpleJWT, PostgreSQL. No Celery, no Docker.
+Python 3.13, Django 6.1, DRF 3.18, SimpleJWT, PostgreSQL, Celery.
 
 Read `docs/ai/guardrails.md` before your first change. It is short and it is the
 difference between a change that ships and one that quietly breaks logins.
@@ -12,7 +12,8 @@ difference between a change that ships and one that quietly breaks logins.
 config/          settings (base/dev/staging/prod), root urls, middleware, schema tests
 authentication/  the only app: accounts, JWT, verification, passwords, email change,
                  account deletion, Google OAuth
-docs/            endpoints, configuration, email templates, deployment, git
+docs/            endpoints, configuration, email templates, background jobs,
+                 deployment, git
 docs/ai/         how to work here -- architecture, conventions, guardrails, recipes
 ```
 
@@ -26,6 +27,7 @@ authentication/
 ├── utils/        cookies, code generation, email, Google helpers
 ├── tests/        mirrors the structure above: tests/models, tests/views, ...
 ├── auth.py       the project-wide authentication class
+├── tasks.py      background jobs; email is queued, never sent in the request
 ├── throttles.py  one throttle class per named rate scope
 └── urls.py       routes, mounted in config/urls.py
 ```
@@ -37,6 +39,7 @@ pytest                      # run every test
 pytest authentication -q    # one app
 black . && isort . && flake8 .   # formatting and lint, exactly what CI runs
 python manage.py runserver  # then open http://localhost:8000/docs/
+celery -A config worker     # only when CELERY_BROKER_URL is set; else jobs run inline
 python manage.py makemigrations && python manage.py migrate
 ```
 

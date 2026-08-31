@@ -138,9 +138,18 @@ and remove that line before committing. Never log codes in a deployed environmen
 
 ---
 
-## Moving email to a background queue
+## Where the sending happens
 
-Sending inside the request adds its latency to the user's wait. At real volume, move
-it to Celery: add the broker, wrap `_send` in a task, and call `.delay(...)`. Only
-`utils/email/__init__.py` and the call sites change, which is the reason for the
-indirection.
+Nowhere near the request. `_send` **queues** the message and returns; the Celery task
+in `authentication/tasks.py` calls the provider and retries on failure.
+
+You do not have to think about this when adding an email — write the sender function
+as above and it is queued like the rest. Two consequences are worth knowing:
+
+- **The return value means "queued", not "delivered."** It is `False` only when the
+  template id or provider is missing, which is checked before queueing. A provider
+  outage is discovered later, by the worker.
+- **Whatever you pass must be JSON.** The variables dict crosses a process boundary.
+  A string, a number or a bool is fine; a model instance or a `datetime` is not.
+
+[background-jobs.md](../../background-jobs.md) has the rest.

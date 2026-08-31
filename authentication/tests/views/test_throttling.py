@@ -22,9 +22,11 @@ RATES = {
     "login": "20/hour",
     "token_refresh": "30/minute",
     "google_auth": "20/hour",
+    "google_callback": "20/hour",
     "code_request": "5/hour",
     "code_submit": "5/hour",
     "password_reset": "5/hour",
+    "profile_update": "20/hour",
     "email_change": "5/hour",
     "account_deletion": "5/hour",
     "user_info": "60/minute",
@@ -135,6 +137,22 @@ class TestAuthenticatedEndpoints:
 
 
 class TestAccountEndpoints:
+    def test_profile_updates_are_throttled_per_user(self, auth_client, settings):
+        body = {"first_name": "Janet"}
+        send = lambda: auth_client.patch(reverse("profile-update"), body, format="json")  # noqa: E731
+
+        assert exhaust(send, limit(settings, "profile_update")) == 429
+
+    def test_one_users_profile_limit_does_not_affect_another(self, api_client, base_user, second_user, settings):
+        api_client.force_authenticate(user=base_user)
+        for _ in range(limit(settings, "profile_update") + 1):
+            api_client.patch(reverse("profile-update"), {"first_name": "Janet"}, format="json")
+
+        api_client.force_authenticate(user=second_user)
+        response = api_client.patch(reverse("profile-update"), {"first_name": "Ada"}, format="json")
+
+        assert response.status_code == 200
+
     def test_email_changes_are_throttled_per_user(self, auth_client, settings):
         body = {"new_email": "taken@example.com", "password": "wrong"}
         send = lambda: auth_client.post(reverse("change-email"), body, format="json")  # noqa: E731
@@ -166,6 +184,25 @@ class TestGoogleThrottling:
             api_client.get(reverse("google-oauth-login"))
 
         response = api_client.get(reverse("google-oauth-login"))
+
+        assert response.status_code == 302
+        assert response.headers["Location"] == f"{settings.FRONTEND_URL}/login?error=google_rate_limit"
+
+    def test_the_callback_has_its_own_bucket(self, api_client, settings):
+        """
+        A sign-in spends one request on the callback and two on `google_auth`. Sharing
+        a bucket would let the callback consume a third of every login budget.
+        """
+        for _ in range(limit(settings, "google_auth") + 1):
+            api_client.get(reverse("google-oauth-login"))
+
+        assert api_client.get(reverse("google-oauth-callback")).status_code == 302
+
+    def test_the_callback_redirects_when_throttled(self, api_client, settings):
+        for _ in range(limit(settings, "google_callback")):
+            api_client.get(reverse("google-oauth-callback"))
+
+        response = api_client.get(reverse("google-oauth-callback"))
 
         assert response.status_code == 302
         assert response.headers["Location"] == f"{settings.FRONTEND_URL}/login?error=google_rate_limit"

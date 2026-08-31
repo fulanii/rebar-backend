@@ -27,7 +27,8 @@ months later the codebase has four patterns for the same job.
 | [require-unique-phone-numbers.md](recipes/require-unique-phone-numbers.md) | Making `phone_number` unique, and what it costs. |
 | [soft-delete-accounts.md](recipes/soft-delete-accounts.md) | Retaining records instead of hard-deleting a user. |
 
-Outside this folder: [../endpoints.md](../endpoints.md) lists every route,
+Outside this folder: [../background-jobs.md](../background-jobs.md) covers Celery and
+the worker you have to deploy, [../endpoints.md](../endpoints.md) lists every route,
 [../configuration.md](../configuration.md) documents every environment variable,
 [../email-templates.md](../email-templates.md) covers the four email templates,
 [../git-workflow.md](../git-workflow.md) covers branching and pull requests, and

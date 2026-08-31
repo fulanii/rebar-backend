@@ -28,10 +28,12 @@ authentication/views/…       the endpoint
     │
     ├──▶ serializers/…       validate input, shape output
     ├──▶ models/…            read and write the database
-    └──▶ utils/…             cookies, emails, codes, Google
-    │
-    ▼
-HTTP response
+    ├──▶ utils/…             cookies, codes, Google
+    └──▶ tasks.py            queue slow work ─────▶ Celery worker (another process)
+    │                                                  │
+    ▼                                                  └─ sends the email, retries
+HTTP response                                             if the provider is down
+    (does not wait for the worker)
 ```
 
 The order matters: authentication and throttling both run **before** your view code.
@@ -46,6 +48,7 @@ A view can assume `request.user` is a real, active, unsuspended user whenever it
 | `serializers/` | Validate incoming JSON; decide what goes back out. | Query across the app. Send email. |
 | `views/` | Handle one endpoint: call a serializer, call a util, return a response. | Contain validation logic. |
 | `utils/` | Reusable pieces with no HTTP knowledge: hashing a code, setting a cookie. | Import views. |
+| `tasks.py` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances — a worker may run it seconds later, in another process. |
 | `throttles.py` | One class per rate limit scope. | Anything else. |
 | `auth.py` | Decide who the caller is. | Decide what they may do. |
 
@@ -71,9 +74,19 @@ Get the user model with `get_user_model()` or `settings.AUTH_USER_MODEL`.
 ## Tests
 
 Each app owns its tests in `<app>/tests/`, mirroring the source layout. There is no
-project-wide test folder; `config/tests/` holds only the schema guards, because what
-they check — the routing table and the API-docs configuration — belongs to the project
-rather than to any one app.
+project-wide test folder; `config/tests/` holds only the whole-project guards, because
+what they check belongs to the project rather than to any one app:
+
+| File | Asserts |
+|---|---|
+| `test_routes.py` | Every **routed** view declares a throttle and its permissions. |
+| `test_conventions.py` | One view per file, everywhere. |
+| `test_schema.py` | The OpenAPI schema builds without warnings, and every routed view method has a docstring. |
+| `test_security_settings.py` | HTTPS, HSTS and cookie flags are on outside development. |
+
+All three walk the URLconf (`config/tests/routes.py`) rather than a list of views. A
+view is dangerous when it is *routed*, and a list can be forgotten — that is exactly
+how `GoogleOAuthCallbackView` once shipped with no rate limit at all.
 
 Shared fixtures live in the root `conftest.py` and are available to every app without
 being imported. App-specific ones go in `<app>/tests/conftest.py`.
@@ -127,6 +140,7 @@ SimpleJWT has already loaded the user row by that point.
 |---|---|---|
 | Database | Users, verification codes (with their attempt counters), reset codes, pending email changes, blacklisted tokens. | Yes |
 | Cache | Rate-limit counters; the Google OAuth `state` and handoff code. | No |
+| Broker | Queued jobs, until a worker takes them. | Yes, in Redis |
 | Nowhere | Access tokens. They are self-describing and are not stored. | — |
 
 The cache entries are why a multi-process deployment needs Redis rather than the

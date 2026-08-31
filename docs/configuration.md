@@ -145,6 +145,35 @@ own separate limits.
 
 ---
 
+## Background jobs
+
+### `CELERY_BROKER_URL` — required in staging and production
+
+Where queued jobs are written. Defaults to `REDIS_URL`, so on most deployments you set
+nothing:
+
+```
+CELERY_BROKER_URL=redis://localhost:6379/0
+```
+
+**Leave it empty in development and jobs run inline**, in the request, exactly as they
+did before Celery existed. That is what keeps `runserver` and `pytest` working with no
+broker and no worker installed.
+
+Staging and production refuse to start without one, rather than silently falling back
+to inline sending — which is a latency bug that only appears under load.
+
+Setting it is half the job: **something has to run `celery -A config worker`**, or
+every email is queued into a queue nobody reads and no code ever arrives. See
+[background-jobs.md](background-jobs.md).
+
+### `EMAIL_MAX_RETRIES`
+
+How many times a failed send is retried, with exponential backoff. Defaults to `3`, and
+is `0` while the tests run.
+
+---
+
 ## Email
 
 Verification codes and password resets go through [Brevo](https://brevo.com) or
@@ -181,10 +210,12 @@ new account never receives its code. Building all four takes a few minutes:
 Brevo's free tier allows 300 emails a day across unlimited sending domains; Resend's
 allows 100 a day on a single domain. That difference is why Brevo is the default.
 
-Sending never raises: a provider outage is logged and the user's request still
-succeeds. A signup should not fail with a 500 because an email service had a bad
+Sending never raises, and never happens in the request at all: the endpoint queues the
+message and returns. A provider outage is retried by the worker, then logged and
+dropped. A signup should not fail with a 500 because an email service had a bad
 minute. The consequence is that you must always give users a way to request the email
-again — which is what the resend endpoint is for.
+again — which is what the resend endpoint is for. See
+[background-jobs.md](background-jobs.md).
 
 **Reading a code locally without an API key:** the code is hashed in the database
 and cannot be read back. Either set a real key, or temporarily log the raw code in
@@ -271,3 +302,5 @@ more problems than it solves:
 | `last_login` on every sign-in | On | `UPDATE_LAST_LOGIN`, plus the two views that issue tokens themselves. |
 | Rate limits | Per endpoint | See `DEFAULT_THROTTLE_RATES`. Read `docs/ai/guardrails.md` before changing one. |
 | API docs and Django admin | Dev only | Mounted in `config/urls.py` when `ENABLE_API_DOCS` is on, which only `dev.py` sets. |
+| Task serializer | JSON | A worker is a separate process, so a task argument that is not JSON cannot reach it. |
+| Eager task failures | Not propagated | A dead email provider must never turn a signup into a 500. |

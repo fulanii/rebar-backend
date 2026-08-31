@@ -43,6 +43,11 @@ the endpoint expects. A test of something sitting *behind* the throttle can take
 `unlimited_requests` fixture, which lifts the limits for that test only. In manual
 testing, restart the server or clear the cache.
 
+**And when adding a view, give it a throttle.** `DEFAULT_THROTTLE_CLASSES` is empty on
+purpose, so a view that omits `throttle_classes` is not rate limited at all — it fails
+open, silently, with nothing in the logs. `config/tests/test_routes.py` walks the
+URLconf and fails on any routed view without one.
+
 ---
 
 ## 3. Do not change the refresh cookie's path or name
@@ -244,7 +249,7 @@ nobody has proved they own. That is a typo away from locking a real user out of 
 own account, and one deliberate keystroke away from parking your users on a domain
 someone else controls.
 
-**Do this instead:** what `authentication/views/emails/` does. The password is
+**Do this instead:** what `authentication/views/account_update/email/` does. The password is
 required even though the request is authenticated; a code goes to the new address and
 **only** the new address; and availability is checked twice — once when the code is
 issued and again when it is used, because minutes pass in between.
@@ -254,7 +259,49 @@ address would break the link to the Google identity that signs them in.
 
 ---
 
-## 14. `is_active` is not a spare field
+## 14. Queued email needs a worker, and a worker is a second deployment
+
+**The temptation:** `CELERY_BROKER_URL` is set, the tests pass, registration returns
+201. Ship it.
+
+**What it breaks:** nothing visible. The endpoint queues the email and returns
+successfully; if no worker is running, that job sits in Redis forever. Users register
+and no code ever arrives. The web logs show 201s. Every test still passes, because the
+suite runs tasks eagerly and never needs a broker at all.
+
+**Do this instead:** deploy the worker as its own service —
+`celery -A config worker --loglevel=info` — with the same environment variables as the
+web service, and check its startup log lists the task:
+
+```
+[tasks]
+  . authentication.tasks.send_email
+```
+
+Development has no such trap: with `CELERY_BROKER_URL` empty, jobs run inline in the
+request. Staging and production refuse to boot without a broker rather than quietly
+doing the same, because inline sending in production is a latency bug that only shows
+up under load.
+
+---
+
+## 15. A task takes ids, not objects
+
+**The temptation:** the task needs the user, and the user is right there.
+
+**What it breaks:** two things. Task arguments are serialized to JSON, so a model
+instance cannot cross to the worker at all — it fails at queue time, in production,
+having passed every test where eager mode kept it in the same process. And if you
+serialize the fields by hand instead, the worker acts on a snapshot that may be
+seconds stale.
+
+**Do this instead:** pass `user.id` and refetch inside the task. Assume the task runs
+**twice** — a queue delivers at least once — and never log a code, a token or a
+password from one.
+
+---
+
+## 16. `is_active` is not a spare field
 
 It means "has verified their email". Registration deliberately creates users with
 `is_active=False`, and Django's own auth refuses to authenticate them. Repurposing it

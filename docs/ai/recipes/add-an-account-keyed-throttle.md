@@ -55,8 +55,8 @@ an attacker.
 throttle_classes = [LoginRateThrottle, LoginPerAccountRateThrottle]
 ```
 
-Do the same on `CustomTokenObtainPairView` in `views/jwt_tokens.py` — it takes the
-same credentials, so leaving it alone leaves the door open.
+Do the same on `CustomTokenObtainPairView` in `views/jwt_tokens/obtain.py` — it takes
+the same credentials, so leaving it alone leaves the door open.
 
 ## 4. Tests
 

@@ -87,5 +87,7 @@ Endpoints that take an email address return the **same** message whether or not 
 address is registered, so none of them can be used to find out who has an account
 here. See [ai/guardrails.md](ai/guardrails.md).
 
-Every unauthenticated endpoint is rate limited and can return **429** with a
-`detail` saying when to try again.
+Every endpoint is rate limited and can return **429** with a `detail` saying when to
+try again. The two Google routes reached by browser navigation redirect to
+`FRONTEND_URL/login?error=google_rate_limit` instead, since a JSON error body would
+render as raw text in the address bar.

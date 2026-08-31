@@ -22,6 +22,21 @@ gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 -
 point — more workers need more memory, so tune it against real traffic. Logging to `-`
 sends the logs to stdout, where the platform collects them.
 
+**The Celery worker — a second service, from the same repo:**
+
+```
+celery -A config worker --loglevel=info --concurrency=4
+```
+
+Give it the **same environment variables** as the web service. It is a separate
+process with no web server and no `$PORT`; on most platforms that means adding a
+second service pointed at the same repository and branch, with this start command.
+
+**Deploying the web service without the worker is the failure to watch for.** Every
+email is queued into a queue nobody reads: registration returns 201, no code ever
+arrives, and nothing in the web logs looks wrong. See
+[background-jobs.md](background-jobs.md).
+
 **Pre-deploy / release command:**
 
 ```
@@ -76,6 +91,7 @@ REDIS_URL                required — see below
 BREVO_API_KEY            or nobody can verify an email (or RESEND_API_KEY)
 VERIFICATION_TEMPLATE_ID  the other three template ids are needed for reset,
                          email change and the password-changed notice
+CELERY_BROKER_URL        defaults to REDIS_URL; a worker must be running
 ```
 
 Production deliberately fails at boot when one of these is missing, rather than
@@ -83,9 +99,13 @@ starting in a state that half works.
 
 ### Redis is not optional
 
-You will be running more than one worker, and the Google sign-in flow needs all of
-them to share one cache. Without it, logins fail intermittently in a way that is
-genuinely hard to diagnose. Add the platform's Redis add-on and set `REDIS_URL`.
+It does two jobs here. First, you will be running more than one gunicorn worker, and
+the Google sign-in flow needs all of them to share one cache — without it, logins fail
+intermittently in a way that is genuinely hard to diagnose. Second, it is the Celery
+broker, and staging and production refuse to start without one.
+
+Add the platform's Redis add-on and set `REDIS_URL`. `CELERY_BROKER_URL` defaults to
+it, so one variable covers both.
 
 ## Add-ons to provision
 

@@ -12,7 +12,7 @@ written down in [`docs/ai/`](docs/ai/), and [`CLAUDE.md`](CLAUDE.md) /
 
 ## What's in it
 
-**Authentication is complete** — 352 tests, all green, covering the failure paths as
+**Authentication is complete** — 407 tests, all green, covering the failure paths as
 well as the happy ones.
 
 | | |
@@ -23,8 +23,9 @@ well as the happy ones.
 | **Google sign-in** | Server-side redirect flow. Works on mobile, where the popup button does not. |
 | **Sessions** | Access token in the body, refresh token in an httpOnly cookie, rotation with blacklisting, real logout. |
 | **Suspension** | Enforced on every request, not just at login. |
-| **Rate limits** | Per endpoint, on everything unauthenticated. |
+| **Rate limits** | Every route, with its own scope. A test fails if a view forgets one. |
 | **Email delivery** | Brevo or Resend, chosen by one env var. Templates live in their dashboard. |
+| **Background jobs** | Celery. Email is queued, retried with backoff, and never blocks a request. Runs inline until you set a broker. |
 | **API reference** | Swagger at `/docs/`, generated from the code, development only. |
 | **Project setup** | Four settings modules, `bootstrap.py`, CI, pre-commit, and the `docs/ai/` rule set. |
 
@@ -73,6 +74,7 @@ at `/docs/` has the full request and response shape for each, generated from the
 | [endpoints.md](docs/endpoints.md) | Every route, grouped, with what each one is for |
 | [configuration.md](docs/configuration.md) | Every environment variable — what it does, what breaks without it |
 | [email-templates.md](docs/email-templates.md) | Building the four email templates (Brevo or Resend) |
+| [background-jobs.md](docs/background-jobs.md) | Celery: what is queued, running a worker, and deploying one |
 | [git-workflow.md](docs/git-workflow.md) | Branching, pull requests, and why you never push to `main` |
 | [deployment.md](docs/deployment.md) | Shipping to Railway and similar platforms |
 | [roadmap.md](docs/roadmap.md) | What is built, planned, and deliberately absent |
@@ -87,6 +89,17 @@ anyone:
 | [`conventions.md`](docs/ai/conventions.md) | The house style |
 | [`recipes/`](docs/ai/recipes/) | Step-by-step: adding an endpoint, a model, an app, an email, an account-keyed throttle |
 | [`glossary.md`](docs/ai/glossary.md) | Every term in plain English, no experience assumed |
+
+---
+
+## License
+
+[MIT](LICENSE) — use it commercially, modify it, ship it closed-source, no attribution
+in your product required. It is provided as is, with no warranty and no liability:
+what you deploy and how you secure it is yours.
+
+Keep the `LICENSE` file if you redistribute the boilerplate itself. If you are building
+your own product on it, replace it with whatever licence your product needs.
 
 ---
 

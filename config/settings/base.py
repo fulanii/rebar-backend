@@ -118,9 +118,11 @@ REST_FRAMEWORK = {
         "login": "20/hour",
         "token_refresh": "30/minute",
         "google_auth": "20/hour",
+        "google_callback": "20/hour",
         "code_request": "5/hour",
         "code_submit": "5/hour",
         "password_reset": "5/hour",
+        "profile_update": "20/hour",
         "email_change": "5/hour",
         "account_deletion": "5/hour",
         "user_info": "60/minute",
@@ -139,6 +141,35 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+
+# --------------------------------------------------------------
+# Background jobs (Celery)
+# --------------------------------------------------------------
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL") or os.getenv("REDIS_URL", "")
+
+CELERY_TASK_ALWAYS_EAGER = IF_TESTING or not CELERY_BROKER_URL
+
+CELERY_TASK_EAGER_PROPAGATES = False
+
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+
+CELERY_RESULT_BACKEND = None
+
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_TASK_TIME_LIMIT = 120
+
+CELERY_TASK_SOFT_TIME_LIMIT = 60
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+CELERY_WORKER_SEND_TASK_EVENTS = False
+
+EMAIL_MAX_RETRIES = 0 if IF_TESTING else 3
 
 
 # --------------------------------------------------------------

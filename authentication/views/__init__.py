@@ -1,10 +1,16 @@
 """View exports. Import from the package, not from the module files."""
 
-from .account_deletion import AccountDeletionView
-from .emails import EmailChangeConfirmView, EmailChangeRequestView
+from .account_update import (
+    AccountDeletionView,
+    EmailChangeConfirmView,
+    EmailChangeRequestView,
+    PasswordChangeView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+    ProfileUpdateView,
+)
 from .google_auth import GoogleOAuthCallbackView, GoogleOAuthExchangeView, GoogleOAuthLoginView
 from .jwt_tokens import CustomTokenBlacklistView, CustomTokenObtainPairView, CustomTokenRefreshView
-from .passwords import PasswordChangeView, PasswordResetConfirmView, PasswordResetRequestView
 from .user_info import UserInfoView
 from .user_login import UserLoginView
 from .user_registration import UserRegistrationView
@@ -25,6 +31,7 @@ __all__ = [
     "PasswordResetRequestView",
     "PasswordResetConfirmView",
     "PasswordChangeView",
+    "ProfileUpdateView",
     "UserInfoView",
     "UserLoginView",
     "UserRegistrationView",

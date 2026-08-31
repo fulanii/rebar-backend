@@ -5,7 +5,10 @@ The provider is chosen by `EMAIL_PROVIDER`; each one lives in its own module bes
 this file and exposes the same `send(to_email, template_id, variables)`. The copy and
 design of every email live in that provider's dashboard, not here.
 
-See docs/email-templates.md.
+Every `send_*_email` here **queues** the message and returns immediately. `deliver()`
+is the half that actually talks to the provider, and it runs in the Celery worker.
+
+See docs/email-templates.md and docs/background-jobs.md.
 """
 
 import logging
@@ -26,8 +29,12 @@ PROVIDERS = {
 }
 
 
-def _send(to_email, template_id, variables):
-    """Dispatch to the configured provider. True on success, False on any failure."""
+def deliver(to_email, template_id, variables):
+    """
+    Dispatch to the configured provider. True on success, False on any failure.
+
+    Runs inside the Celery task, not in the request.
+    """
     send = PROVIDERS.get(settings.EMAIL_PROVIDER)
 
     if send is None:
@@ -38,11 +45,34 @@ def _send(to_email, template_id, variables):
         )
         return False
 
-    if not template_id:
-        logger.error("event=email_not_sent reason=no_template_id to=%s", to_email)
+    return send(to_email, template_id, variables)
+
+
+def _send(to_email, template_id, variables):
+    """
+    Queue one email. True when it was handed to the worker, False when it cannot be.
+
+    The two checks here are the ones whose answer cannot change between now and the
+    moment a worker picks the job up, so there is no point queueing past them. Anything
+    that might succeed on a retry -- a provider outage, a rate limit -- is the task's
+    problem, not this function's.
+    """
+    if settings.EMAIL_PROVIDER not in PROVIDERS:
+        logger.error(
+            "event=email_not_queued reason=unknown_provider provider=%s known=%s",
+            settings.EMAIL_PROVIDER,
+            ",".join(PROVIDERS),
+        )
         return False
 
-    return send(to_email, template_id, variables)
+    if not template_id:
+        logger.error("event=email_not_queued reason=no_template_id to=%s", to_email)
+        return False
+
+    from authentication.tasks import send_email
+
+    send_email.delay(to_email, template_id, variables)
+    return True
 
 
 def send_verification_email(to_email, first_name, code):

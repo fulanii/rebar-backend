@@ -1,4 +1,10 @@
-"""The email senders: which provider runs, and what it is handed."""
+"""
+The email layer, which is two halves.
+
+`send_*_email` queues; `deliver` is what the Celery worker runs. Tests that care about
+a provider's behaviour call `deliver` directly, because by the time a provider can
+fail the request is long finished.
+"""
 
 import pytest
 
@@ -8,7 +14,7 @@ from authentication.utils import (
     send_password_reset_email,
     send_verification_email,
 )
-from authentication.utils.email import CODE_EXPIRY_MINUTES
+from authentication.utils.email import CODE_EXPIRY_MINUTES, deliver
 
 
 @pytest.fixture(autouse=True)
@@ -47,10 +53,8 @@ class TestBrevo:
 
         assert isinstance(block_outbound_email.brevo_send.call_args.kwargs["template_id"], int)
 
-    def test_a_non_numeric_template_id_is_refused(self, brevo, settings, block_outbound_email):
-        settings.VERIFICATION_TEMPLATE_ID = "tmpl_verify"
-
-        assert send_verification_email("jane@example.com", "Jane", "004821") is False
+    def test_a_non_numeric_template_id_is_refused(self, brevo, block_outbound_email):
+        assert deliver("jane@example.com", "tmpl_verify", {}) is False
         assert not block_outbound_email.called
 
     def test_sends_the_documented_variables(self, brevo, block_outbound_email):
@@ -70,13 +74,14 @@ class TestBrevo:
     def test_missing_api_key_sends_nothing(self, brevo, settings, block_outbound_email):
         settings.BREVO_API_KEY = ""
 
-        assert send_verification_email("jane@example.com", "Jane", "004821") is False
+        assert deliver("jane@example.com", "3", {}) is False
         assert not block_outbound_email.called
 
-    def test_a_provider_failure_is_swallowed(self, brevo, block_outbound_email):
+    def test_a_provider_failure_is_reported_not_raised(self, brevo, block_outbound_email):
+        """The worker needs a False to retry on; nothing may escape as an exception."""
         block_outbound_email.brevo_send.side_effect = Exception("brevo is down")
 
-        assert send_verification_email("jane@example.com", "Jane", "004821") is False
+        assert deliver("jane@example.com", "3", {}) is False
 
 
 class TestResend:
@@ -111,13 +116,13 @@ class TestResend:
     def test_missing_api_key_sends_nothing(self, resend, settings, block_outbound_email):
         settings.RESEND_API_KEY = ""
 
-        assert send_verification_email("jane@example.com", "Jane", "004821") is False
+        assert deliver("jane@example.com", "tmpl_verify", {}) is False
         assert not block_outbound_email.called
 
-    def test_a_provider_failure_is_swallowed(self, resend, block_outbound_email):
+    def test_a_provider_failure_is_reported_not_raised(self, resend, block_outbound_email):
         block_outbound_email.resend.side_effect = Exception("resend is down")
 
-        assert send_verification_email("jane@example.com", "Jane", "004821") is False
+        assert deliver("jane@example.com", "tmpl_verify", {}) is False
 
 
 class TestSharedBehaviour:
@@ -136,13 +141,14 @@ class TestSharedBehaviour:
         params = block_outbound_email.brevo_send.call_args.kwargs["params"]
         assert params["EXPIRY_MINUTES"] == CODE_LIFETIME.total_seconds() // 60
 
-    def test_no_template_id_sends_nothing(self, brevo, settings, block_outbound_email):
+    def test_no_template_id_is_never_queued(self, brevo, settings, block_outbound_email):
+        """Neither check can change between queueing and the worker, so neither is queued."""
         settings.VERIFICATION_TEMPLATE_ID = ""
 
         assert send_verification_email("jane@example.com", "Jane", "004821") is False
         assert not block_outbound_email.called
 
-    def test_an_unknown_provider_sends_nothing(self, settings, block_outbound_email):
+    def test_an_unknown_provider_is_never_queued(self, settings, block_outbound_email):
         settings.EMAIL_PROVIDER = "mailgun"
 
         assert send_verification_email("jane@example.com", "Jane", "004821") is False

@@ -28,8 +28,7 @@ class UserInfoView(APIView):
         **Throttle:** 60/minute per user (`user_info` scope) -- clients call this on
         every page load to rehydrate their session.
 
-        Read-only. There is no profile-update endpoint in this boilerplate; see
-        `docs/ai/recipes/add-an-endpoint.md` to add one.
+        Read-only. There is no profile-update endpoint.
 
         ---
 

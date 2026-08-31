@@ -27,7 +27,25 @@ authentication/views/google_auth/
 └── exchange.py
 ```
 
-**One view per file.** A module with two view classes in it is a module to split.
+**One view per file.** A module with two view classes in it is a module to split, and
+`config/tests/test_conventions.py` fails the build until you do. Every flow in
+`authentication/views/` is a package for this reason: `google_auth/`, `verifications/`,
+`jwt_tokens/`, `account_update/`.
+
+A package nests further when it groups several flows rather than several endpoints.
+`account_update/` is everything a signed-in person can change about their own account,
+so the two flows that need more than one endpoint get a folder each:
+
+```
+authentication/views/account_update/
+├── update.py           ← name only
+├── delete_account.py
+├── email/              ← change.py, confirm.py, shared.py
+└── password/           ← change.py, reset_request.py, reset_confirm.py, shared.py
+```
+
+The `__init__.py` at each level re-exports upward, so `authentication.views` still
+offers every view as a flat name and nothing outside the package knows the depth.
 
 Serializers mirror the same shape, so `views/verifications/` has
 `serializers/verifications/` beside it. A shape used by more than one feature —
@@ -94,8 +112,11 @@ Test names are sentences. `test_login_2` tells you nothing when it fails at 3am.
 
 - Thin. Call a serializer, call a util, return a `Response`.
 - Always set `permission_classes` and `throttle_classes` explicitly, even when the
-  value matches the default. It should never take a search to learn who can call an
-  endpoint.
+  value matches the default, or when a third-party base class already sets one. It
+  should never take a search to learn who can call an endpoint or how often.
+  `config/tests/test_routes.py` enforces both on every routed view — and the throttle
+  one matters beyond tidiness, since `DEFAULT_THROTTLE_CLASSES` is empty and a missing
+  `throttle_classes` means no rate limit at all.
 - One `@extend_schema` per view, naming the request and response serializers.
 - **One tag per view**, `<App>-<Group>` — e.g. `Authentication-Tokens`, the app first
   so a project with several apps groups by app in the Swagger sidebar. A view module

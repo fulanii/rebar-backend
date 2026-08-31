@@ -19,6 +19,10 @@ class GoogleAuthRateThrottle(AnonRateThrottle):
     scope = "google_auth"
 
 
+class GoogleCallbackRateThrottle(AnonRateThrottle):
+    scope = "google_callback"
+
+
 class CodeRequestRateThrottle(AnonRateThrottle):
     scope = "code_request"
 
@@ -29,6 +33,10 @@ class CodeSubmitRateThrottle(AnonRateThrottle):
 
 class PasswordResetRateThrottle(AnonRateThrottle):
     scope = "password_reset"
+
+
+class ProfileUpdateRateThrottle(UserRateThrottle):
+    scope = "profile_update"
 
 
 class EmailChangeRateThrottle(UserRateThrottle):

@@ -159,6 +159,7 @@ Adding things:
 | [endpoints.md](endpoints.md) | Every route the backend serves |
 | [configuration.md](configuration.md) | Every environment variable |
 | [email-templates.md](email-templates.md) | Building the four email templates |
+| [background-jobs.md](background-jobs.md) | Celery, and the worker you must deploy |
 | [git-workflow.md](git-workflow.md) | Branching and pull requests |
 | [deployment.md](deployment.md) | Shipping it |
 | [ai/guardrails.md](ai/guardrails.md) | What quietly breaks this project |

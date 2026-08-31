@@ -13,6 +13,7 @@ from google.oauth2 import id_token
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
+from authentication.throttles import GoogleCallbackRateThrottle
 from authentication.utils import exchange_code_for_tokens, get_or_create_google_user, issue_jwt_payload
 
 from .shared import (
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 )
 class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [GoogleCallbackRateThrottle]
 
     def get(self, request):
         """
@@ -47,6 +49,11 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         **Endpoint:** GET `auth/google/callback/`
 
         **Authentication:** None required
+
+        **Throttle:** 20/hour per IP (`google_callback` scope). Its own scope, not the
+        `google_auth` one the other two Google endpoints share -- a single sign-in
+        spends one request here and two there, so one bucket would let the callback
+        eat a third of every user's login budget.
 
         **Called by Google, not by your frontend.** Register this exact URL as an
         authorized redirect URI on the Google OAuth client.
@@ -63,6 +70,31 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
 
         ---
 
+        ## Frontend Routes This Endpoint Requires
+
+        Both paths below are **string literals in this file**, not settings.
+        `FRONTEND_URL` configures the host; the paths themselves do not move. Your
+        frontend must serve a route at each one, spelled exactly like this. Rename
+        either in your app and Google sign-in breaks with nothing logged here --
+        the redirect succeeds, and the browser lands on your 404.
+
+        | Path             | Reached on | Carries                                    |
+        |------------------|------------|--------------------------------------------|
+        | `/auth/callback` | success    | `#code=<handoff>` in the fragment           |
+        | `/login`         | any failure| `?error=google`, `?error=google_rate_limit` |
+
+        To move them, edit the `frontend_redirect` calls here and in `shared.py`, then
+        the `Location` assertions in `tests/views/test_google_auth.py` and
+        `tests/views/test_throttling.py`.
+
+        **Both are redirects rather than JSON on purpose.** This endpoint is reached by
+        browser navigation from Google, so a JSON body would render as raw text in the
+        address bar with no way back. That includes the failure path: the most common
+        "error" is someone clicking Cancel on Google's consent screen, and they should
+        land on your login page, not on a JSON document served by the API.
+
+        ---
+
         ## Responses
 
         ### 302 Found — success
@@ -70,7 +102,12 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
 
         The handoff code goes in the URL **fragment**, not the query string: fragments
         are never sent to a server, so it stays out of proxy and server logs. The
-        frontend reads it and posts it to `auth/google/exchange/`.
+        frontend reads it from `window.location.hash` and posts it to
+        `auth/google/exchange/`.
+
+        The code is single-use and expires after two minutes
+        (`EXCHANGE_TTL_SECONDS`), so the frontend must post it exactly once -- guard
+        against React StrictMode running an effect twice in development.
 
         JWTs are deliberately not put in the URL at all -- they would land in browser
         history and in the `Referer` header of the next request.
@@ -80,6 +117,10 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         cancelled, `state` was missing/forged/already used, the code exchange failed,
         or Google returned no email. The reason is logged server-side; the browser is
         told only that it did not work.
+
+        A throttled request redirects to `FRONTEND_URL/login?error=google_rate_limit`
+        instead, via `BrowserOAuthErrorMixin`. Your login page should read the `error`
+        query parameter and show a message for both values.
 
         ---
 
