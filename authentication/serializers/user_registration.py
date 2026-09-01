@@ -86,7 +86,7 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
         """
         Hand an unverified account to whoever just registered with its address.
 
-        Nobody ever proved they owned the address, so the row holds no claim on it --
+        Nobody ever proved they owned the address, so the row holds no claim on it,
         see docs/ai/guardrails.md. Every field is overwritten and the old password is
         discarded, so the previous registration keeps nothing at all.
         """

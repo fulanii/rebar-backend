@@ -18,13 +18,13 @@ is part of its identity: `GET /auth/me/` and `POST /auth/me/` are different endp
 The text format APIs use to exchange data: `{"email": "jane@example.com"}`.
 
 ### Model
-A Python class describing one kind of thing you store — a user, a verification code.
+A Python class describing one kind of thing you store, a user, a verification code.
 Each model becomes a database table, and each of its fields becomes a column.
 
 ### Migration
 A file recording a change to the database's shape ("add a phone_number column").
 Django generates them from your models with `makemigrations` and applies them with
-`migrate`. **Never edit one that has already been applied** — write a new one.
+`migrate`. **Never edit one that has already been applied**, write a new one.
 
 ### Serializer
 The translator and the bouncer. Turns incoming JSON into validated Python (rejecting
@@ -41,14 +41,14 @@ to log each request.
 ---
 
 ### Authentication vs authorization
-**Authentication** is *who are you* — checking the token and finding the user.
-**Authorization** is *what may you do* — checking permissions. Different questions;
+**Authentication** is *who are you*, checking the token and finding the user.
+**Authorization** is *what may you do*, checking permissions. Different questions;
 this codebase keeps them in different files (`auth.py` and `permission_classes`).
 
 ### JWT (JSON Web Token)
 A signed string that proves who you are. The server can verify it without looking
 anything up, because it is signed with `SECRET_KEY`. Anyone can *read* what is inside
-one — it is not encrypted — so it must never contain a secret.
+one, since it is not encrypted, so it must never contain a secret.
 
 ### Access token
 The short-lived JWT (30 minutes here) sent with every request as
@@ -56,12 +56,12 @@ The short-lived JWT (30 minutes here) sent with every request as
 
 ### Refresh token
 The long-lived token (7 days) used only to obtain new access tokens. In this project
-it never appears in a response body — it lives in an httpOnly cookie.
+it never appears in a response body, it lives in an httpOnly cookie.
 
 ### Token rotation
 Each time a refresh token is used, it is replaced with a new one and the old one is
 blacklisted. So a stolen refresh token stops working as soon as the real user
-refreshes — which limits the damage to a single use.
+refreshes, which limits the damage to a single use.
 
 ### Blacklist
 The list of refresh tokens that have been revoked. What makes logout real: without
@@ -76,7 +76,7 @@ older token is refused. A completed password reset does both.
 
 ### httpOnly cookie
 A cookie the browser will not let JavaScript read. It is still sent with requests
-automatically — the browser can use it, your code cannot. That is what protects the
+automatically, the browser can use it, your code cannot. That is what protects the
 refresh token from a script injected into your frontend.
 
 ### SameSite
@@ -99,7 +99,7 @@ same idea applied to OAuth.
 
 ### Hashing
 A one-way scramble. A password (or a verification code) is stored as a hash, so a
-leaked database does not hand over the originals — you can check a guess against a
+leaked database does not hand over the originals, you can check a guess against a
 hash, but you cannot turn a hash back into the password.
 
 ### Salt
@@ -109,14 +109,14 @@ different stored values. Django does this for you.
 ### OTP / one-time code
 The 6-digit number emailed to verify an address, reset a password or confirm a new
 email address. Single-use, expires after 15 minutes, and dies after five wrong
-guesses — the throttle limits one attacker, the counter limits all of them at once.
+guesses, the throttle limits one attacker, the counter limits all of them at once.
 
 ### OAuth
 The protocol behind "Sign in with Google". Google confirms who the user is and tells
 us, so we never see their Google password.
 
 ### Throttle / rate limit
-A cap on how often something can be called — 5 per hour, 60 per minute. It is the
+A cap on how often something can be called, 5 per hour, 60 per minute. It is the
 main defence against guessing codes and passwords.
 
 ---
@@ -131,7 +131,7 @@ The single file holding your secrets, gitignored. It also carries
 settings run. Never commit it, never paste it into a chat.
 
 `.env.staging` and `.env.prod` sit beside it holding each environment's values. Neither
-is ever loaded — they are reference, and what you copy from when deploying.
+is ever loaded. They are reference, and what you copy from when deploying.
 
 ### Settings module
 Which configuration file the app loads: `config.settings.dev` on your machine,
@@ -142,7 +142,7 @@ A reusable piece of test setup. `base_user` creates a user for any test that ask
 one by naming it as an argument.
 
 ### Mock / patch
-Replacing a real thing with a fake during a test — the email sender, for instance —
+Replacing a real thing with a fake during a test (the email sender, for instance)
 so tests never send real email and never depend on a third party being up.
 
 ### Migration vs. fixture vs. seed

@@ -32,7 +32,7 @@ class SuspensionAwareJWTAuthentication(JWTAuthentication):
         True when the token was issued before the account's sessions were revoked.
 
         Blacklisting handles refresh tokens, which are stored. Access tokens are not
-        stored anywhere, so this timestamp is the only way to stop one -- without it a
+        stored anywhere, so this timestamp is the only way to stop one, without it a
         password reset leaves the intruder a 30-minute tail.
 
         `iat` is whole seconds, so the comparison is inclusive: a token minted in the

@@ -30,7 +30,7 @@ class GoogleOAuthExchangeView(APIView):
 
         **Endpoint:** POST `auth/google/exchange/`
 
-        **Authentication:** None required -- the handoff code is the credential.
+        **Authentication:** None required, the handoff code is the credential.
 
         **Throttle:** 20/hour per IP (`google_auth` scope)
 

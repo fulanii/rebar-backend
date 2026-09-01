@@ -80,7 +80,7 @@ class TestIssueCode:
         assert PasswordReset.objects.get(user=base_user).check_code(reset) is True
 
     def test_successive_codes_are_not_identical(self, base_user):
-        """Not a uniqueness proof -- a signal that the generator is not returning a constant."""
+        """Not a uniqueness proof, a signal that the generator is not returning a constant."""
         codes = {issue_code(EmailVerification, base_user) for _ in range(10)}
 
         assert len(codes) > 1

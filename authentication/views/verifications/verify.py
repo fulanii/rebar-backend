@@ -78,7 +78,7 @@ class EmailVerificationView(APIView):
 
         ### 400 Bad Request
         Wrong code, expired code, already-used code, a code that has run out of
-        attempts, or an unknown address -- all return the same body on purpose, so
+        attempts, or an unknown address, all return the same body on purpose, so
         this endpoint cannot be used to discover which addresses have accounts.
 
         ```json

@@ -1,7 +1,7 @@
 # Background jobs
 
 Slow work does not belong in an HTTP request. Sending an email means a round trip to
-Brevo or Resend — usually a few hundred milliseconds, occasionally many seconds, and
+Brevo or Resend, usually a few hundred milliseconds, occasionally many seconds, and
 sometimes never. A signup that waits for it is a signup that is as slow as the worst
 day your email provider is having.
 
@@ -33,7 +33,7 @@ call you can.
 inline in the request, exactly as they did before Celery existed. `runserver` and
 `pytest` need no broker, no worker, and no Redis.
 
-To run it properly — which you should do at least once before deploying:
+To run it properly, which you should do at least once before deploying:
 
 ```bash
 redis-server                                  # the broker
@@ -76,7 +76,7 @@ that only shows up under load.
 ## Retries
 
 A failed send is retried three times with exponential backoff and jitter
-(`EMAIL_MAX_RETRIES`). Retries apply to things that might work on a second attempt —
+(`EMAIL_MAX_RETRIES`). Retries apply to things that might work on a second attempt,
 an outage, a timeout, a rate limit.
 
 They deliberately do **not** apply to a missing template id or an unknown provider.
@@ -99,7 +99,7 @@ Three rules, each of which has cost somebody a bad afternoon:
 
 1. **Pass ids, not objects.** Arguments are serialized to JSON and may be read seconds
    later by another process. A model instance cannot cross that gap, and a stale copy
-   of one is worse than an id — refetch inside the task.
+   of one is worse than an id, refetch inside the task.
 2. **Assume it runs twice.** A queue delivers *at least* once. If running your task
    twice would charge someone twice, make it idempotent.
 3. **Never log a code, a token or a password.** Worker logs are logs like any other.
@@ -111,7 +111,7 @@ immediately, in-process. Tests read as though the work were still synchronous, a
 test needs a broker.
 
 `CELERY_TASK_EAGER_PROPAGATES` is deliberately **off**. With it on, an exception inside
-a task would surface as an exception in the request that queued it — which is neither
+a task would surface as an exception in the request that queued it, which is neither
 what production does nor what you want in development, where a dead email provider
 would start returning 500s from registration.
 

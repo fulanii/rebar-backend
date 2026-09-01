@@ -37,7 +37,7 @@ class AccountDeletionView(APIView):
         **Throttle:** 5/hour per user (`account_deletion` scope)
 
         This is a **hard delete** and cannot be undone. The user row goes, and with it
-        every row pointing at it -- verification codes, reset codes, pending email
+        every row pointing at it, verification codes, reset codes, pending email
         changes. SimpleJWT keeps its own token rows with a null user; they are opaque
         strings, they are blacklisted first, and they expire on their own.
 

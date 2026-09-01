@@ -13,7 +13,7 @@ cd my_saas
 
 Run it from *outside* the folder, as above. Renaming the folder is the last thing
 `bootstrap.py` does, and a shell sitting inside a folder that gets renamed is left
-pointing at a path that no longer exists — staying outside means you simply walk in.
+pointing at a path that no longer exists, staying outside means you simply walk in.
 It prints the right `cd` either way.
 
 `bootstrap.py` does everything that makes this yours rather than mine:
@@ -22,17 +22,17 @@ It prints the right `cd` either way.
   `SECRET_KEY`, and deletes the `.example` templates they replace
 - clears the boilerplate's migrations
 - titles the API docs after your project
-- gitignores `docs/` — the boilerplate's own documentation, which stays on disk for
+- gitignores `docs/`, the boilerplate's own documentation, which stays on disk for
   you and your AI tools to read
 - deletes this repo's git history, leaving you with no repository at all
 - renames the folder to your project name
 - deletes itself
 
 It stops short of `git init` on purpose. Starting the repository is step 5, once the
-project runs and the tests are green — so your first commit is one you chose to make,
+project runs and the tests are green, so your first commit is one you chose to make,
 under the git identity you meant to use, of a project you have seen working.
 
-Run it once, before anything else. It cannot run twice — the last thing it does is
+Run it once, before anything else. It cannot run twice, the last thing it does is
 remove itself, so what you are left with is your project and nothing of mine.
 
 ## 2. Install and run
@@ -41,12 +41,14 @@ remove itself, so what you are left with is your project and nothing of mine.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
+pre-commit install
+
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
 ```
 
-Open **http://localhost:8000/docs/** — every endpoint, with its request and response
+Open **http://localhost:8000/docs/**, every endpoint, with its request and response
 shapes, generated from the code.
 
 Runs on SQLite with no setup at all.
@@ -57,7 +59,7 @@ Runs on SQLite with no setup at all.
 pytest
 ```
 
-Green means the whole auth flow works on your machine. If it isn't, stop here — every
+Green means the whole flow works on your machine. If it isn't, stop here. Every
 step below assumes it is.
 
 ## 4. Fill in `.env`
@@ -66,8 +68,8 @@ The app runs without any of these; each one switches on a feature.
 
 | To get | Set |
 |---|---|
-| Emails — verification, password reset, email change, password-changed notice | `EMAIL_PROVIDER` (`brevo` or `resend`), that provider's API key, and the four template ids — see [email-templates.md](email-templates.md) |
-| Sign in with Google | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — see [docs/configuration.md](configuration.md) |
+| Emails: verification, password reset, email change, password-changed notice | `EMAIL_PROVIDER` (`brevo` or `resend`), that provider's API key, and the four template ids, see [email-templates.md](email-templates.md) |
+| Sign in with Google | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, see [docs/configuration.md](configuration.md) |
 
 **Nobody can finish registering until `VERIFICATION_TEMPLATE_ID` exists**, since
 verification is part of signing up. Build the other three before your first real user.
@@ -100,7 +102,7 @@ branch off staging  →  push the branch  →  pull request  →  merge
 ```
 
 CI runs on pull requests **only**, so a direct push to `main` runs no formatter, no
-linter, no migration check and no tests — and deploys anyway. Turn on branch
+linter, no migration check and no tests, and deploys anyway. Turn on branch
 protection for both branches so the rule holds even at 2am.
 
 [docs/git-workflow.md](git-workflow.md) has the commands, the protection
@@ -118,7 +120,7 @@ usually there is nothing to do. If yours does not, start a session with:
 
 Read [`ai/guardrails.md`](ai/guardrails.md) yourself too, even if you never
 open the code. It is short, and it is the list of things that quietly break this
-project — the kind of change an assistant will happily make if you ask it to "just get
+project, the kind of change an assistant will happily make if you ask it to "just get
 the tests passing".
 
 ## 7. Start building
@@ -131,14 +133,18 @@ Add your own app beside `authentication/`:
 ## Day to day
 
 ```bash
-pytest                            # the whole suite
-pytest authentication -q          # one app
-black . && isort . && flake8 .    # exactly what CI runs
-pre-commit install                # run the above automatically before each commit
+pytest # the whole suite
+pytest authentication -q # one app
+black . && isort . && flake8 . # exactly what CI runs
+pre-commit install # if you skipped it in step 2
 ```
 
 CI fails on any formatting difference, lint error, missing migration, or failing test,
 so running these locally is how you avoid a red pull request.
+
+With `pre-commit install` done, most of that is automatic: the formatters and linters
+run on every commit, and the full suite runs on every push. See
+[git-workflow.md](git-workflow.md).
 
 Adding things:
 
@@ -148,18 +154,13 @@ Adding things:
 | A model | [ai/recipes/add-a-model.md](ai/recipes/add-a-model.md) |
 | A whole app | [ai/recipes/add-an-app.md](ai/recipes/add-an-app.md) |
 | Another email | [ai/recipes/send-an-email.md](ai/recipes/send-an-email.md) |
-| Anything else | [ai/recipes/](ai/recipes/) — seven of them |
+| Anything else | [ai/recipes/](ai/recipes/) |
 
 ---
 
 ## Where to go next
 
-| | |
-|---|---|
-| [endpoints.md](endpoints.md) | Every route the backend serves |
-| [configuration.md](configuration.md) | Every environment variable |
-| [email-templates.md](email-templates.md) | Building the four email templates |
-| [background-jobs.md](background-jobs.md) | Celery, and the worker you must deploy |
-| [git-workflow.md](git-workflow.md) | Branching and pull requests |
-| [deployment.md](deployment.md) | Shipping it |
-| [ai/guardrails.md](ai/guardrails.md) | What quietly breaks this project |
+Back to the **[documentation index](README.md)**, which routes by what you are trying
+to do. The two you will want soonest are
+[configuration.md](configuration.md) for the environment variables and
+[background-jobs.md](background-jobs.md) before you deploy.

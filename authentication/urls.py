@@ -1,7 +1,7 @@
 """
 Authentication routes, mounted at `/auth/` in config/urls.py.
 
-The JWT token endpoints are NOT here -- they live at `/token/` in the root URLconf,
+The JWT token endpoints are NOT here, they live at `/token/` in the root URLconf,
 because the refresh cookie is scoped to that path.
 """
 

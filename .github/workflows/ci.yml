@@ -36,7 +36,7 @@ jobs:
       - name: flake8
         run: flake8 .
 
-      # Fails if a model was changed without a matching migration -- the mistake
+      # Fails if a model was changed without a matching migration, the mistake
       # that deploys fine and then breaks the moment a query runs.
       - name: Check for missing migrations
         env:

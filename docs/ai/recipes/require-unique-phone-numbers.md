@@ -1,6 +1,6 @@
 # Recipe: require unique phone numbers
 
-Out of the box, two accounts may share a phone number. That is the right default —
+Out of the box, two accounts may share a phone number. That is the right default,
 families and small businesses genuinely share one line, and blocking it turns away
 real users.
 
@@ -9,14 +9,14 @@ you may want it unique instead. Three changes.
 
 ---
 
-## 1. The model — `authentication/models/custom_user.py`
+## 1. The model, `authentication/models/custom_user.py`
 
 ```python
 phone_number = models.CharField(max_length=15, blank=True, default="", unique=True)
 ```
 
 **This will not work as written**, and the reason matters: `unique=True` treats every
-empty string as equal, so the *second* Google sign-up — which has no phone number —
+empty string as equal, so the *second* Google sign-up, which has no phone number,
 collides with the first. Use a conditional constraint instead, which only applies to
 rows that actually have a number:
 
@@ -33,7 +33,7 @@ class Meta:
 
 ---
 
-## 2. The serializer — `authentication/serializers/user_registration.py`
+## 2. The serializer, `authentication/serializers/user_registration.py`
 
 The constraint gives a database error; the serializer gives a readable message.
 
@@ -88,7 +88,7 @@ def test_two_google_users_without_phone_numbers_can_coexist(self, api_client):
 ## One caveat
 
 This leaks information. An attacker can now discover whether a given phone number has
-an account by trying to register with it — the same problem the login endpoint
+an account by trying to register with it, the same problem the login endpoint
 carefully avoids (see [../guardrails.md](../guardrails.md) §4). If that matters more
 to you than the anti-abuse benefit, do the check silently: accept the registration and
 flag the account for review instead of rejecting it.

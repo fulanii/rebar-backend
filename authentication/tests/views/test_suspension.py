@@ -13,7 +13,7 @@ def client_with_real_token(user):
     A client carrying a genuine access token.
 
     `force_authenticate` bypasses the authentication class entirely, so it cannot be
-    used here -- the authentication class is exactly what we are testing.
+    used here, the authentication class is exactly what we are testing.
     """
     client = APIClient()
     token = RefreshToken.for_user(user).access_token

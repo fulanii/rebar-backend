@@ -6,7 +6,7 @@ public endpoint and someone guessing 6-digit codes or spraying passwords, so the
 tested like any other security control.
 
 Each test reads its limit from settings and sends one request too many, so raising a
-limit does not quietly slip past — it changes how many requests the test sends, while
+limit does not quietly slip past, it changes how many requests the test sends, while
 `TestConfiguredRates` pins the numbers themselves.
 """
 

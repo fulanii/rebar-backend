@@ -48,13 +48,13 @@ A view can assume `request.user` is a real, active, unsuspended user whenever it
 | `serializers/` | Validate incoming JSON; decide what goes back out. | Query across the app. Send email. |
 | `views/` | Handle one endpoint: call a serializer, call a util, return a response. | Contain validation logic. |
 | `utils/` | Reusable pieces with no HTTP knowledge: hashing a code, setting a cookie. | Import views. |
-| `tasks.py` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances — a worker may run it seconds later, in another process. |
+| `tasks.py` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances, a worker may run it seconds later, in another process. |
 | `throttles.py` | One class per rate limit scope. | Anything else. |
 | `auth.py` | Decide who the caller is. | Decide what they may do. |
 
 **Validation belongs in serializers, not views.** A view that checks a field itself
 is a rule that will not apply the next time that field is accepted somewhere else.
-`serializers/validators.py` holds the rules shared by more than one serializer --
+`serializers/validators.py` holds the rules shared by more than one serializer,
 password strength lives there so registration and password reset cannot disagree.
 
 ## Dependency direction
@@ -85,7 +85,7 @@ what they check belongs to the project rather than to any one app:
 | `test_security_settings.py` | HTTPS, HSTS and cookie flags are on outside development. |
 
 All three walk the URLconf (`config/tests/routes.py`) rather than a list of views. A
-view is dangerous when it is *routed*, and a list can be forgotten — that is exactly
+view is dangerous when it is *routed*, and a list can be forgotten. That is exactly
 how `GoogleOAuthCallbackView` once shipped with no rate limit at all.
 
 Shared fixtures live in the root `conftest.py` and are available to every app without
@@ -101,7 +101,7 @@ Four files in `config/settings/`. Each environment module starts with
 | Module | Used for | Notable |
 |---|---|---|
 | `base.py` | Shared by all. | Apps, DRF config, JWT lifetimes, throttle rates, logging. |
-| `dev.py` | Your machine. | `DEBUG=True`, SQLite with no setup, CORS wide open, and the only module that sets `ENABLE_API_DOCS` — **the API docs and Django admin are mounted here and nowhere else**. |
+| `dev.py` | Your machine. | `DEBUG=True`, SQLite with no setup, CORS wide open, and the only module that sets `ENABLE_API_DOCS`, **the API docs and Django admin are mounted here and nowhere else**. |
 | `staging.py` | A production rehearsal. | Postgres, Redis, HTTPS enforced. CI runs the tests against this. |
 | `prod.py` | Real traffic. | Same as staging plus HSTS. Missing env vars fail loudly at boot. |
 
@@ -111,9 +111,9 @@ Pick one with `DJANGO_SETTINGS_MODULE`. It defaults to `config.settings.dev`.
 
 Two tokens, and the difference matters:
 
-- **Access token** — 30 minutes. Sent by the client as `Authorization: Bearer …`.
+- **Access token**, 30 minutes. Sent by the client as `Authorization: Bearer …`.
   Returned in the JSON body. If stolen it is useful for at most 30 minutes.
-- **Refresh token** — 7 days. Exchanged for new access tokens. **Never appears in a
+- **Refresh token**, 7 days. Exchanged for new access tokens. **Never appears in a
   response body.** It lives in an httpOnly cookie scoped to `/token/`, so JavaScript
   cannot read it, and so it is not attached to ordinary API calls.
 
@@ -123,7 +123,7 @@ A stolen refresh token therefore stops working as soon as the real user refreshe
 A completed password reset calls `revoke_sessions(user)`, which signs out every device:
 outstanding refresh tokens are blacklisted, and `sessions_revoked_at` on the user row
 makes `authentication/auth.py` refuse access tokens issued before that moment. Both
-halves are needed — blacklisting alone leaves live access tokens working for up to 30
+halves are needed, blacklisting alone leaves live access tokens working for up to 30
 minutes. Deleting an account revokes the same way before the row goes.
 
 Password *change* leaves other sessions alone: that person is signed in and gave the
@@ -141,7 +141,7 @@ SimpleJWT has already loaded the user row by that point.
 | Database | Users, verification codes (with their attempt counters), reset codes, pending email changes, blacklisted tokens. | Yes |
 | Cache | Rate-limit counters; the Google OAuth `state` and handoff code. | No |
 | Broker | Queued jobs, until a worker takes them. | Yes, in Redis |
-| Nowhere | Access tokens. They are self-describing and are not stored. | — |
+| Nowhere | Access tokens. They are self-describing and are not stored. |, |
 
 The cache entries are why a multi-process deployment needs Redis rather than the
 in-process default: two workers must see the same cache or Google logins fail at

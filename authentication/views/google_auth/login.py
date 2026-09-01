@@ -33,7 +33,7 @@ class GoogleOAuthLoginView(BrowserOAuthErrorMixin, APIView):
 
         **Throttle:** 20/hour per IP (`google_auth` scope)
 
-        Point a link or `window.location` at this URL -- do not fetch() it. It is a
+        Point a link or `window.location` at this URL, do not fetch() it. It is a
         navigation, and the browser must actually travel to Google.
 
         ---
@@ -52,7 +52,7 @@ class GoogleOAuthLoginView(BrowserOAuthErrorMixin, APIView):
         Redirects to `FRONTEND_URL/login?error=google_rate_limit` rather than
         returning JSON, because this is a browser navigation.
 
-        `/login` is a **string literal** in `shared.py`, not a setting -- your frontend
+        `/login` is a **string literal** in `shared.py`, not a setting, your frontend
         must serve that route. See `GoogleOAuthCallbackView` for the full list of
         frontend paths this flow depends on.
         """

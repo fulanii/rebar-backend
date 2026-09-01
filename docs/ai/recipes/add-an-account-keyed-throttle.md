@@ -3,7 +3,7 @@
 **The gap this closes.** Every throttle in `authentication/throttles.py` that guards a
 public endpoint subclasses DRF's `AnonRateThrottle`, which buckets by **client IP**.
 That stops one machine hammering one endpoint. It does not stop a thousand machines
-each trying one password against the same account — from the throttle's point of view
+each trying one password against the same account, from the throttle's point of view
 that is a thousand different users each making a single request.
 
 Codes are already covered from the other direction: `MAX_ATTEMPTS` on
@@ -30,7 +30,7 @@ class LoginPerAccountRateThrottle(SimpleRateThrottle):
         return self.cache_format % {"scope": self.scope, "ident": email.strip().lower()}
 ```
 
-Returning `None` means "do not throttle this request" — a request with no email in it
+Returning `None` means "do not throttle this request", a request with no email in it
 has no account to protect, and the IP throttle still applies.
 
 Import `SimpleRateThrottle` from `rest_framework.throttling`.
@@ -55,7 +55,7 @@ an attacker.
 throttle_classes = [LoginRateThrottle, LoginPerAccountRateThrottle]
 ```
 
-Do the same on `CustomTokenObtainPairView` in `views/jwt_tokens/obtain.py` — it takes
+Do the same on `CustomTokenObtainPairView` in `views/jwt_tokens/obtain.py`, it takes
 the same credentials, so leaving it alone leaves the door open.
 
 ## 4. Tests
@@ -76,6 +76,6 @@ map or the suite fails. Add:
   `allow_request`, or raise the rate.
 - **It is an enumeration surface.** A 429 on an address that has no account tells the
   caller nothing, because the key is the string they sent, not a row that exists.
-  Keep it that way — never look the user up to decide whether to count.
+  Keep it that way, never look the user up to decide whether to count.
 - **It needs a shared cache.** Two gunicorn workers with the in-process default each
   keep their own counters, so the effective limit doubles. See guardrail 5.

@@ -3,7 +3,7 @@ Access tokens issued before a revocation.
 
 Blacklisting only reaches refresh tokens, which are stored. An access token is stored
 nowhere, so `sessions_revoked_at` on the user row is the only thing that can stop one
-before it expires — without it a password reset leaves a 30-minute tail.
+before it expires, without it a password reset leaves a 30-minute tail.
 """
 
 from datetime import timedelta

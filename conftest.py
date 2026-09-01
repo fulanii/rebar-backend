@@ -47,7 +47,7 @@ def email_configured(settings):
     Give every test a working email configuration.
 
     There is no fallback body, so without an API key and template ids `_send` returns
-    early and nothing reaches a provider — which would make "an email was sent"
+    early and nothing reaches a provider, which would make "an email was sent"
     unassertable everywhere. The provider calls themselves are still mocked by
     `block_outbound_email`; tests covering the unconfigured cases override these.
     """
@@ -141,12 +141,12 @@ def unlimited_requests(monkeypatch, settings):
     """
     Raise every rate limit out of the way for one test.
 
-    Only for tests of a control that sits *behind* the throttle -- the per-code attempt
+    Only for tests of a control that sits *behind* the throttle, the per-code attempt
     counter, say, which needs more requests than one IP is ever allowed. The real rates
     stay where they are; `tests/views/test_throttling.py` pins them.
 
     `SimpleRateThrottle` reads the rates once at import, so overriding the setting is
-    not enough -- the class attribute is what every throttle actually consults.
+    not enough, the class attribute is what every throttle actually consults.
     """
     rates = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
     monkeypatch.setattr(SimpleRateThrottle, "THROTTLE_RATES", {scope: "1000/hour" for scope in rates})

@@ -1,7 +1,7 @@
 """
 The security posture each environment promises.
 
-Guardrail #10 and docs/configuration.md make specific claims — HTTPS enforced, no
+Guardrail #10 and docs/configuration.md make specific claims, HTTPS enforced, no
 wildcard CORS, the API docs and Django admin confined to development. These assert
 them, so loosening one is a failing test rather than a quiet regression.
 """

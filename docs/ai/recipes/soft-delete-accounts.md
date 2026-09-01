@@ -35,7 +35,7 @@ live token must not.
   overwriting, or accept the limitation and say so in your product.
 - **It is not deletion.** If you are subject to GDPR or CCPA, an anonymised row is
   only defensible when nothing in it identifies the person any more. Check what your
-  other tables still hold — an invoice with their name on it is still their data.
+  other tables still hold, an invoice with their name on it is still their data.
 - **Your queries change.** Everything counting users now counts tombstones. Filter on
   `is_active` or add an explicit `is_deleted` flag.
 

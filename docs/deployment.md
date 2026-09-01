@@ -1,6 +1,6 @@
 # Deployment
 
-Written for platforms that build straight from a Git repository — Railway, Render,
+Written for platforms that build straight from a Git repository, Railway, Render,
 Fly, Heroku. You connect the repo, set environment variables in a dashboard, and each
 merge deploys.
 
@@ -19,10 +19,10 @@ gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 -
 ```
 
 `$PORT` is injected by the platform. Do not hardcode 8000. `--workers 3` is a starting
-point — more workers need more memory, so tune it against real traffic. Logging to `-`
+point, more workers need more memory, so tune it against real traffic. Logging to `-`
 sends the logs to stdout, where the platform collects them.
 
-**The Celery worker — a second service, from the same repo:**
+**The Celery worker, a second service, from the same repo:**
 
 ```
 celery -A config worker --loglevel=info --concurrency=4
@@ -44,12 +44,12 @@ python manage.py migrate --noinput
 ```
 
 Railway calls this a pre-deploy command, Render a pre-deploy command, Heroku a release
-phase. Whatever it is called, it runs **before** the new version takes traffic — so
+phase. Whatever it is called, it runs **before** the new version takes traffic, so
 migrations are applied while the *old* code is still serving requests.
 
 That ordering is why a migration must be backwards-compatible with the version it is
 replacing: adding a column is safe; dropping one the running code still selects is
-not. Split a rename into two deploys — add the new column, ship code that uses it,
+not. Split a rename into two deploys, add the new column, ship code that uses it,
 then remove the old one.
 
 If your platform has no release hook, run `migrate` yourself from its shell before
@@ -67,7 +67,7 @@ Create two services from the same repository, each watching its own branch, each
 its own database, its own Redis, and its own environment variables. Merging to
 `staging` deploys staging; merging to `main` deploys production.
 
-Point CI at both branches — it already runs on pull requests into either. It does
+Point CI at both branches, it already runs on pull requests into either. It does
 **not** run on direct pushes, which is one reason nothing should reach either branch
 except through a merged pull request. See [git-workflow.md](git-workflow.md).
 
@@ -87,7 +87,7 @@ CORS_ALLOWED_ORIGINS     your frontend's origin
 FRONTEND_URL             your frontend's base URL
 DOMAIN                   bare domain, for the refresh cookie
 DB_NAME DB_USER DB_PASSWORD DB_HOST
-REDIS_URL                required — see below
+REDIS_URL                required, see below
 BREVO_API_KEY            or nobody can verify an email (or RESEND_API_KEY)
 VERIFICATION_TEMPLATE_ID  the other three template ids are needed for reset,
                          email change and the password-changed notice
@@ -100,7 +100,7 @@ starting in a state that half works.
 ### Redis is not optional
 
 It does two jobs here. First, you will be running more than one gunicorn worker, and
-the Google sign-in flow needs all of them to share one cache — without it, logins fail
+the Google sign-in flow needs all of them to share one cache, without it, logins fail
 intermittently in a way that is genuinely hard to diagnose. Second, it is the Celery
 broker, and staging and production refuse to start without one.
 
@@ -109,9 +109,9 @@ it, so one variable covers both.
 
 ## Add-ons to provision
 
-- **Postgres** — one per environment. Never let staging point at the production
+- **Postgres**, one per environment. Never let staging point at the production
   database; a staging test that deletes rows would delete real ones.
-- **Redis** — one per environment.
+- **Redis**, one per environment.
 
 ## After the first deploy
 
@@ -120,7 +120,7 @@ it, so one variable covers both.
    included.
    on it.
 2. Create an admin account: `python manage.py createsuperuser` through the
-   platform's shell. Note that the Django admin is not mounted outside development —
+   platform's shell. Note that the Django admin is not mounted outside development,
    the superuser flags exist for your own tooling.
 3. Check `/docs/` returns 404 in production. If it does not, `DJANGO_SETTINGS_MODULE`
    is wrong.
@@ -128,7 +128,7 @@ it, so one variable covers both.
 ## Static files
 
 Nothing is served from disk. The API returns JSON only; the browsable API, Swagger
-and the Django admin — the three things that need static files — are all confined to
+and the Django admin, the three things that need static files, are all confined to
 development. If you later mount any of them in a deployed environment, add
 `whitenoise` and run `collectstatic`.
 
@@ -136,7 +136,7 @@ development. If you later mount any of them in a deployed environment, add
 
 Point the platform's health check at any cheap endpoint. `GET /auth/me/` without a
 token returns a fast 401, which proves the app and its settings loaded. If you want a
-real check that touches the database, add a health endpoint — see
+real check that touches the database, add a health endpoint. See
 `docs/ai/recipes/add-an-endpoint.md`.
 
 ## Rolling back

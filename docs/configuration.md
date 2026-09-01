@@ -6,7 +6,7 @@ into the code.
 ## How it loads
 
 **The app reads exactly one file: `.env`.** `bootstrap.py` creates it, with a
-generated `SECRET_KEY`, from a template it then deletes — so after bootstrap there is
+generated `SECRET_KEY`, from a template it then deletes, so after bootstrap there is
 one file per environment and no near-identical copy to edit by mistake.
 
 Which settings module runs is decided by `DJANGO_SETTINGS_MODULE`, and that variable
@@ -21,7 +21,7 @@ the settings module, which is what lets that variable come from the file rather 
 having to be exported into every shell. `config/settings/base.py` loads it again for
 paths that skip those entrypoints, such as pytest.
 
-To run staging or production settings locally, change that one line — no other file
+To run staging or production settings locally, change that one line, no other file
 moves.
 
 ### `.env.staging` and `.env.prod`
@@ -42,14 +42,14 @@ traceback must not be able to forge a session for a production account.
 ### Environment variables beat the file
 
 A real environment variable always wins over `.env`. On a host like Railway you set
-values in a dashboard and ship no env file at all — better, since nothing sensitive
+values in a dashboard and ship no env file at all, better, since nothing sensitive
 touches the disk. A missing `.env` is not an error.
 
 ---
 
 ## Core
 
-### `SECRET_KEY` — required everywhere
+### `SECRET_KEY`, required everywhere
 
 Signs session cookies and JWTs. Generate one with:
 
@@ -61,10 +61,10 @@ python -c "import secrets; print(secrets.token_urlsafe(50))"
 that ends up in a screenshot, a pasted traceback, or a chat log can forge a session
 for any production account.
 
-Changing it signs every user out — which is exactly what you want if it ever leaks.
+Changing it signs every user out, which is exactly what you want if it ever leaks.
 Rotate it immediately in that case.
 
-### `ALLOWED_HOSTS` — required in staging and production
+### `ALLOWED_HOSTS`, required in staging and production
 
 Comma-separated hostnames this app will answer to. Django rejects any request with a
 different `Host` header, which stops someone pointing their own domain at your server
@@ -76,7 +76,7 @@ ALLOWED_HOSTS=api.example.com,api2.example.com
 
 Development uses `*` and ignores this.
 
-### `CORS_ALLOWED_ORIGINS` — required in staging and production
+### `CORS_ALLOWED_ORIGINS`, required in staging and production
 
 Comma-separated frontend origins allowed to call this API from a browser. Include the
 scheme, include the port if there is one, no trailing slash.
@@ -91,12 +91,12 @@ your logged-in users' sessions.
 
 Development allows all origins on purpose; that setting is confined to `dev.py`.
 
-### `FRONTEND_URL` — required everywhere
+### `FRONTEND_URL`, required everywhere
 
 Your frontend's base URL. Google sign-in redirects the browser here when it finishes,
 and sends users here on failure too.
 
-### `DOMAIN` — staging and production
+### `DOMAIN`, staging and production
 
 Your bare domain, no scheme, no path: `example.com`.
 
@@ -119,13 +119,13 @@ required in staging and production.
 | `DB_HOST` | |
 | `DB_PORT` | Defaults to `5432`. |
 | `DB_CONN_MAX_AGE` | Seconds to keep a connection open between requests. Defaults to `600`. Opening a new connection over the network is expensive, so reusing one matters. |
-| `DB_SSL_MODE` | `require` (default), `verify-full`, or `disable`. Keep encryption on for any remote database — `disable` sends your password in the clear. |
+| `DB_SSL_MODE` | `require` (default), `verify-full`, or `disable`. Keep encryption on for any remote database, `disable` sends your password in the clear. |
 
 ---
 
 ## Cache
 
-### `REDIS_URL` — required whenever you run more than one worker
+### `REDIS_URL`, required whenever you run more than one worker
 
 ```
 REDIS_URL=redis://localhost:6379/0
@@ -136,7 +136,7 @@ Development defaults to an in-process cache, which is fine for a single-process
 
 The Google sign-in flow writes a short-lived `state` value during one request and
 reads it back during another. With several worker processes, each holding its own
-in-process cache, those two requests can land on different workers — and the login
+in-process cache, those two requests can land on different workers, and the login
 fails with `error=google`. Intermittently. On roughly half of attempts. Nothing in
 the logs points at the cause.
 
@@ -147,7 +147,7 @@ own separate limits.
 
 ## Background jobs
 
-### `CELERY_BROKER_URL` — required in staging and production
+### `CELERY_BROKER_URL`, required in staging and production
 
 Where queued jobs are written. Defaults to `REDIS_URL`, so on most deployments you set
 nothing:
@@ -161,7 +161,7 @@ did before Celery existed. That is what keeps `runserver` and `pytest` working w
 broker and no worker installed.
 
 Staging and production refuse to start without one, rather than silently falling back
-to inline sending — which is a latency bug that only appears under load.
+to inline sending, which is a latency bug that only appears under load.
 
 Setting it is half the job: **something has to run `celery -A config worker`**, or
 every email is queued into a queue nobody reads and no code ever arrives. See
@@ -177,7 +177,7 @@ is `0` while the tests run.
 ## Email
 
 Verification codes and password resets go through [Brevo](https://brevo.com) or
-[Resend](https://resend.com) — your choice, set by `EMAIL_PROVIDER`.
+[Resend](https://resend.com), your choice, set by `EMAIL_PROVIDER`.
 
 | Variable | Notes |
 |---|---|
@@ -192,18 +192,18 @@ Verification codes and password resets go through [Brevo](https://brevo.com) or
 Without an API key, emails are skipped and logged as a warning.
 
 **Brevo template ids are integers** (`3`), Resend's are strings (`tmpl_abc123`). A
-non-numeric id under Brevo is refused with an error rather than sent — which is what
+non-numeric id under Brevo is refused with an error rather than sent, which is what
 catches a leftover Resend id after switching provider.
 
 **The copy and design of every email live in the provider's dashboard, not in the
-code.** The backend sends a template id and its variables — `FIRST_NAME`, `CODE` and
+code.** The backend sends a template id and its variables (`FIRST_NAME`, `CODE` and
 `EXPIRY_MINUTES` for the three that carry a code, `FIRST_NAME` alone for the
-password-changed notice — and the provider renders the rest. Changing the wording is a
+password-changed notice) and the provider renders the rest. Changing the wording is a
 dashboard edit, not a deploy, and the variable names are identical on both providers,
 so switching does not mean rewriting templates.
 
 There is no fallback body: with no template id set, nothing is sent and an error is
-logged. **`VERIFICATION_TEMPLATE_ID` is the one that blocks signups** — without it a
+logged. **`VERIFICATION_TEMPLATE_ID` is the one that blocks signups**, without it a
 new account never receives its code. Building all four takes a few minutes:
 [email-templates.md](email-templates.md).
 
@@ -214,7 +214,7 @@ Sending never raises, and never happens in the request at all: the endpoint queu
 message and returns. A provider outage is retried by the worker, then logged and
 dropped. A signup should not fail with a 500 because an email service had a bad
 minute. The consequence is that you must always give users a way to request the email
-again — which is what the resend endpoint is for. See
+again, which is what the resend endpoint is for. See
 [background-jobs.md](background-jobs.md).
 
 **Reading a code locally without an API key:** the code is hashed in the database
@@ -236,7 +236,7 @@ Setup:
 1. In the [Google Cloud console](https://console.cloud.google.com/apis/credentials),
    create an **OAuth client ID** of type **Web application**.
 2. Under **Authorized redirect URIs**, add the callback URL for each environment,
-   **exactly** — scheme, port and trailing slash included:
+   **exactly**, scheme, port and trailing slash included:
    ```
    http://localhost:8000/auth/google/callback/
    https://api.staging.example.com/auth/google/callback/
@@ -252,7 +252,7 @@ the error Google shows does not make that obvious.
 
 ## HTTPS
 
-### `SECURE_HSTS_SECONDS` — production only
+### `SECURE_HSTS_SECONDS`, production only
 
 How long browsers should refuse to talk to your domain over plain http, in seconds.
 Defaults to `31536000` (one year), the value required for preload lists.
@@ -284,7 +284,7 @@ when it reads the client IP for rate limiting, by counting back from the end of 
 `X-Forwarded-For` header.
 
 Raise it only if you genuinely run more than one proxy. Set it too high and a client
-can forge that header to look like a different IP on every request — which makes
+can forge that header to look like a different IP on every request, which makes
 every per-IP rate limit in the project useless.
 
 ---

@@ -14,7 +14,7 @@ the dict.
 **What it breaks:** the refresh token is a seven-day session. In the httpOnly cookie
 it is unreachable from JavaScript, so a script injected into your frontend cannot
 steal it. Put it in the body and the frontend has to store it somewhere JavaScript
-*can* read — and now one cross-site scripting bug hands an attacker a week of
+*can* read, and now one cross-site scripting bug hands an attacker a week of
 access to every account.
 
 **Do this instead:** `set_refresh_cookie(response, refresh)` from
@@ -37,14 +37,14 @@ The throttles are keyed by IP, so they are only half the story. The other half i
 wrong guesses burn the code no matter how many addresses they came from, and the user
 requests a new one. Removing that counter re-opens the door the throttle cannot close.
 
-**Do this instead:** in tests, the cache is cleared between tests automatically —
-if you are hitting a limit, you are probably making more requests in one test than
-the endpoint expects. A test of something sitting *behind* the throttle can take the
+**Do this instead:** in tests, the cache is cleared between tests automatically. If
+you are hitting a limit, you are probably making more requests in one test than the
+endpoint expects. A test of something sitting *behind* the throttle can take the
 `unlimited_requests` fixture, which lifts the limits for that test only. In manual
 testing, restart the server or clear the cache.
 
 **And when adding a view, give it a throttle.** `DEFAULT_THROTTLE_CLASSES` is empty on
-purpose, so a view that omits `throttle_classes` is not rate limited at all — it fails
+purpose, so a view that omits `throttle_classes` is not rate limited at all, it fails
 open, silently, with nothing in the logs. `config/tests/test_routes.py` walks the
 URLconf and fails on any routed view without one.
 
@@ -56,7 +56,7 @@ URLconf and fails on any routed view without one.
 `/auth/` would be tidier.
 
 **What it breaks:** browsers only send a cookie to URLs under its path. Move the
-endpoints without moving the cookie and refresh silently stops working — users get
+endpoints without moving the cookie and refresh silently stops working, users get
 signed out an hour later with no error anywhere. Worse, deleting a cookie requires
 the *exact* same name, path and domain used to set it: a mismatch deletes nothing,
 so logout appears to succeed while the session stays alive.
@@ -81,7 +81,7 @@ code that has run out of attempts all return the **same** message. Password rese
 resend-verification return 200 for addresses that do not exist. There are tests
 asserting exactly this; if you change a message, run them.
 
-The one deliberate exception: an unverified account is told to verify — but only
+The one deliberate exception: an unverified account is told to verify, but only
 after its password has been confirmed correct, so it cannot be used to probe.
 
 ---
@@ -106,7 +106,7 @@ diagnose from the symptom.
 **The temptation:** the migration has a mistake in it, so fix the mistake.
 
 **What it breaks:** Django records which migrations have run. Editing an applied one
-does not re-run it — your database keeps the old shape while the file claims the new
+does not re-run it, your database keeps the old shape while the file claims the new
 one, and the two drift apart silently until a query fails in production.
 
 **Do this instead:** change the model, then `python manage.py makemigrations` to
@@ -114,7 +114,7 @@ generate a *new* migration.
 
 ---
 
-## 7. Keep secrets out of code — including out of docstrings
+## 7. Keep secrets out of code, including out of docstrings
 
 **The temptation:** a docstring example reads better with a real-looking key in it,
 and it is only documentation.
@@ -136,7 +136,7 @@ development key pasted into a chat or a screenshot also forges production sessio
 **The temptation:** the test is in the way and the feature works when you try it by
 hand.
 
-**What it breaks:** the tests here mostly encode security properties — that a token
+**What it breaks:** the tests here mostly encode security properties, that a token
 is invalidated, that an error does not leak, that a code cannot be replayed. A test
 failing after your change usually means your change broke one of those.
 
@@ -173,7 +173,7 @@ the environment. The wide-open setting is confined to `dev.py` on purpose.
 ## 11. Never adopt an unverified account without discarding its password
 
 **The temptation:** a Google sign-in arrives for an address that already has a row.
-The obvious move is to activate it and let the person in — same email, same person.
+The obvious move is to activate it and let the person in, same email, same person.
 
 **What it breaks:** for an *unverified* row, nobody ever proved they own that address,
 so nobody proved they set that password. This is the pre-hijacking attack:
@@ -190,7 +190,7 @@ so nobody proved they set that password. This is the pre-hijacking attack:
 keeps their account and can set a password through the reset flow, which is the same
 proof of ownership they skipped.
 
-An account that *was* already verified keeps its password — that user did prove
+An account that *was* already verified keeps its password, that user did prove
 ownership, and a social login should be a second way in, not a lockout.
 
 The same reasoning runs the other way at registration. An unverified row cannot hold
@@ -222,7 +222,7 @@ differently:
 - **Access tokens** are stored nowhere at all, so the user row is stamped with
   `sessions_revoked_at` and `authentication/auth.py` refuses any token whose `iat` is
   at or before it. Without that stamp the intruder keeps working for up to 30 more
-  minutes — most of a reset's value, gone.
+  minutes, most of a reset's value, gone.
 
 Never delete the `sessions_revoked_at` check to fix a test. A test that fails on it is
 usually issuing a token and revoking in the same second, which the check refuses on
@@ -241,7 +241,7 @@ notification, which is how a change nobody made becomes visible.
 **What it breaks:** two different things, and both are fatal.
 
 Skipping the **password** means a stolen access token can move the account to an
-address the attacker controls — and then reset the password at leisure. Thirty
+address the attacker controls, and then reset the password at leisure. Thirty
 minutes of stolen token becomes permanent ownership.
 
 Skipping the **code to the new address** means the account can be moved to an address
@@ -251,7 +251,7 @@ someone else controls.
 
 **Do this instead:** what `authentication/views/account_update/email/` does. The password is
 required even though the request is authenticated; a code goes to the new address and
-**only** the new address; and availability is checked twice — once when the code is
+**only** the new address; and availability is checked twice, once when the code is
 issued and again when it is used, because minutes pass in between.
 
 Google accounts are refused outright: they have no password to confirm, and moving the
@@ -269,8 +269,8 @@ successfully; if no worker is running, that job sits in Redis forever. Users reg
 and no code ever arrives. The web logs show 201s. Every test still passes, because the
 suite runs tasks eagerly and never needs a broker at all.
 
-**Do this instead:** deploy the worker as its own service —
-`celery -A config worker --loglevel=info` — with the same environment variables as the
+**Do this instead:** deploy the worker as its own service,
+`celery -A config worker --loglevel=info`, with the same environment variables as the
 web service, and check its startup log lists the task:
 
 ```
@@ -290,13 +290,13 @@ up under load.
 **The temptation:** the task needs the user, and the user is right there.
 
 **What it breaks:** two things. Task arguments are serialized to JSON, so a model
-instance cannot cross to the worker at all — it fails at queue time, in production,
+instance cannot cross to the worker at all, it fails at queue time, in production,
 having passed every test where eager mode kept it in the same process. And if you
 serialize the fields by hand instead, the worker acts on a snapshot that may be
 seconds stale.
 
 **Do this instead:** pass `user.id` and refetch inside the task. Assume the task runs
-**twice** — a queue delivers at least once — and never log a code, a token or a
+**twice**, because a queue delivers at least once, and never log a code, a token or a
 password from one.
 
 ---

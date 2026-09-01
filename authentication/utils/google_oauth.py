@@ -61,7 +61,7 @@ def get_or_create_google_user(email, first_name, last_name):
     accounts skip our own verification and are created with an unusable password.
 
     Adopting an existing **unverified** row also discards its password. Nobody ever
-    proved they owned that address, so nobody proved they set that password — see
+    proved they owned that address, so nobody proved they set that password, see
     docs/ai/guardrails.md on pre-hijacking. A verified account keeps its password:
     that person did prove ownership, and Google should be a second way in, not a
     lockout.

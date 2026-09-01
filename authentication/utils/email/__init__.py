@@ -54,7 +54,7 @@ def _send(to_email, template_id, variables):
 
     The two checks here are the ones whose answer cannot change between now and the
     moment a worker picks the job up, so there is no point queueing past them. Anything
-    that might succeed on a retry -- a provider outage, a rate limit -- is the task's
+    that might succeed on a retry (a provider outage, a rate limit) is the task's
     problem, not this function's.
     """
     if settings.EMAIL_PROVIDER not in PROVIDERS:

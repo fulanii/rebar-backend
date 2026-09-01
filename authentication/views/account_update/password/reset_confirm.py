@@ -56,12 +56,12 @@ class PasswordResetConfirmView(APIView):
         ## Field Validation Rules
 
         ### code
-        - Required, exactly 6 characters, digits only. Send as a string -- `"004821"`.
+        - Required, exactly 6 characters, digits only. Send as a string, `"004821"`.
 
         ### new_password
         - Required, 8-128 characters.
         - Must contain an uppercase letter, a lowercase letter, a digit and a special
-          character -- identical to the registration rules.
+          character, identical to the registration rules.
 
         ### confirm_password
         - Required. Must match `new_password`.
@@ -78,7 +78,7 @@ class PasswordResetConfirmView(APIView):
         ```
 
         ### 400 Bad Request
-        Wrong, expired, already-used code, or unknown address -- one shared message:
+        Wrong, expired, already-used code, or unknown address, one shared message:
 
         ```json
         {

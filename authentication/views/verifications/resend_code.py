@@ -34,7 +34,7 @@ class EmailVerificationResendView(APIView):
 
         **Authentication:** None required
 
-        **Throttle:** 5/hour per IP (`code_request` scope) -- each call costs an email.
+        **Throttle:** 5/hour per IP (`code_request` scope), each call costs an email.
 
         ---
 
@@ -84,7 +84,7 @@ class EmailVerificationResendView(APIView):
 
         ## Post-Request Flow
         1. The address is looked up. An unknown or already-verified address does
-           nothing at all -- and returns the same 200.
+           nothing at all, and returns the same 200.
         2. A new code replaces the old row, so the **previous code stops working
            immediately**. A user who then finds the older email and types that code
            will be rejected.

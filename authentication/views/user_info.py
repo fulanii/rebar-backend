@@ -25,7 +25,7 @@ class UserInfoView(APIView):
 
         **Authentication:** JWT required
 
-        **Throttle:** 60/minute per user (`user_info` scope) -- clients call this on
+        **Throttle:** 60/minute per user (`user_info` scope), clients call this on
         every page load to rehydrate their session.
 
         Read-only. There is no profile-update endpoint.

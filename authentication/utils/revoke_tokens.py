@@ -14,7 +14,7 @@ def revoke_sessions(user):
     refuses any token issued before it.
 
     A password reset usually means someone else is in the account, so it calls this.
-    Password *change* deliberately does not -- that person is signed in and gave the
+    Password *change* deliberately does not, that person is signed in and gave the
     current password, so the other sessions are theirs.
     """
     outstanding = OutstandingToken.objects.filter(user=user).exclude(blacklistedtoken__isnull=False)

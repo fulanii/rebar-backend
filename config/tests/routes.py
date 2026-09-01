@@ -9,8 +9,8 @@ def routed_views(ours_only=True):
     """
     Every view class reachable through the URLconf, deduplicated.
 
-    `ours_only` drops the third-party views mounted in development -- the Swagger
-    pages and the admin -- which are not ours to document or rate limit.
+    `ours_only` drops the third-party views mounted in development (the Swagger
+    pages and the admin) which are not ours to document or rate limit.
     """
     seen = {}
 

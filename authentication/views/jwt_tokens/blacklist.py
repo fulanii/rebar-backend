@@ -32,13 +32,13 @@ class CustomTokenBlacklistView(TokenRefreshView):
 
         **Endpoint:** POST `token/blacklist/`
 
-        **Authentication:** None required -- the refresh cookie is the credential.
+        **Authentication:** None required, the refresh cookie is the credential.
 
         **Throttle:** 30/minute per IP (`token_refresh` scope)
 
         Blacklisting is what makes logout real. Without it the refresh token stays
         valid for its full seven days, and clearing the cookie only removes the
-        browser's copy -- anyone who captured the token could keep using it.
+        browser's copy, anyone who captured the token could keep using it.
 
         The already-issued **access** token keeps working until it expires (up to 30
         minutes). To cut someone off immediately, suspend the account: that is checked
@@ -56,7 +56,7 @@ class CustomTokenBlacklistView(TokenRefreshView):
 
         ### 205 Reset Content
         Signed out. The `refresh` cookie is deleted. Returned even when there was no
-        cookie or the token was already invalid -- logout is idempotent and should
+        cookie or the token was already invalid, logout is idempotent and should
         never fail the client.
 
         ### 429 Too Many Requests
@@ -71,7 +71,7 @@ class CustomTokenBlacklistView(TokenRefreshView):
         ## Post-Request Flow
         1. The refresh token is read from the cookie.
         2. It is added to the blacklist so it can never be exchanged again.
-        3. The cookie is deleted -- with the exact same name, path and domain used to
+        3. The cookie is deleted, with the exact same name, path and domain used to
            set it, or the browser would keep it.
         """
 

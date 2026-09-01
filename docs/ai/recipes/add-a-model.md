@@ -4,7 +4,7 @@ Worked example: an `ApiKey` a user can generate.
 
 ---
 
-## 1. Write the model — `<app>/models/api_key.py`
+## 1. Write the model, `<app>/models/api_key.py`
 
 One file per model.
 
@@ -48,7 +48,7 @@ Points worth knowing:
   keeps them and empties the link.
 - **`related_name`** is how you get from a user to their keys.
 - **`null=True` is fine on dates and numbers**, where "unset" is genuinely different
-  from zero. It is not fine on text fields — see [../conventions.md](../conventions.md).
+  from zero. It is not fine on text fields, see [../conventions.md](../conventions.md).
 - **`db_index=True`** on columns you will filter by. Not on everything: each index
   costs write speed and disk.
 - **Rules that must always hold belong in the database**, via `unique=True` or a
@@ -56,7 +56,7 @@ Points worth knowing:
 
 ---
 
-## 2. Export it — `<app>/models/__init__.py`
+## 2. Export it, `<app>/models/__init__.py`
 
 ```python
 from .api_key import ApiKey
@@ -74,7 +74,7 @@ python manage.py migrate
 ```
 
 Read what `makemigrations` prints. If it asks you to choose a default for a new
-non-nullable column on an existing table, stop and think — the answer applies to
+non-nullable column on an existing table, stop and think, the answer applies to
 every row already there.
 
 Commit the migration file. It is code.
@@ -83,7 +83,7 @@ Commit the migration file. It is code.
 
 ---
 
-## 4. Register it in the admin (optional) — `<app>/admin.py`
+## 4. Register it in the admin (optional), `<app>/admin.py`
 
 ```python
 @admin.register(ApiKey)

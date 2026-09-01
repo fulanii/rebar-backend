@@ -141,7 +141,7 @@ class UserRegistrationView(APIView):
            address.
         2. A cryptographically strong 6-digit code is generated.
         3. `EmailVerification` is written with `update_or_create`, so a user always has
-           exactly one live code -- issuing a new one invalidates any previous code.
+           exactly one live code, issuing a new one invalidates any previous code.
         4. Only the **raw** code is emailed; only its **hash** is stored.
         5. Email failures are logged but do not fail the request; the user can ask for
            another code at `POST auth/resend-verification/`.

@@ -1,5 +1,5 @@
-# Secrets. .env holds your database password, your API keys, your everything --
-# never commit it. The .example templates ARE committed; they hold no real values.
+# Secrets. .env holds your database password, your API keys, your everything.
+# Never commit it. The .example templates ARE committed; they hold no real values.
 .env
 .env.*
 !.env.example

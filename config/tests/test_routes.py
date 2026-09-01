@@ -3,7 +3,7 @@ Guards on the routing table itself.
 
 Every check here asks the same question: is something reachable over HTTP without the
 protection the rest of the project assumes it has? Walking the URLconf rather than a
-list of views is the point -- a view is dangerous when it is *routed*, and a list can
+list of views is the point, a view is dangerous when it is *routed*, and a list can
 be forgotten.
 """
 
@@ -12,7 +12,7 @@ from .routes import routed_views
 
 def test_every_routed_view_declares_a_throttle():
     """
-    `DEFAULT_THROTTLE_CLASSES` is empty on purpose -- each view states its own limit,
+    `DEFAULT_THROTTLE_CLASSES` is empty on purpose, each view states its own limit,
     per docs/ai/conventions.md. The cost of that choice is that a view which forgets
     `throttle_classes` is not rate limited at all: it fails open, silently, with
     nothing in the logs. This is the check that catches it.

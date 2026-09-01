@@ -1,38 +1,70 @@
-# Runs formatters and linters before each commit, so CI never fails on style.
+# Two gates, both installed by a single `pre-commit install`:
+#
+#   on commit   formatters, linters and the hygiene checks. About a second.
+#   on push     the full test suite. Too slow to sit in front of every commit,
+#               fast enough in front of a push.
+#
+# Every hook names its stage explicitly. Some upstream hooks declare their own
+# stages, which quietly beats a `default_stages` at the top of this file.
+#
+# The rev pins below must match requirements-dev.txt, or the hook and CI disagree
+# about how the same file should look.
 #
 # Turn it on once per clone:
 #   pip install -r requirements-dev.txt
 #   pre-commit install
 #
 # It rewrites files in place when black or isort make a change: review the result
-# and commit again. Skip it in an emergency with `git commit --no-verify`.
+# and commit again. Skip it in an emergency with `git commit --no-verify`, or
+# `git push --no-verify`. See docs/git-workflow.md.
+
+default_install_hook_types: [pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        stages: [pre-commit]
       - id: end-of-file-fixer
+        stages: [pre-commit]
       - id: check-yaml
+        stages: [pre-commit]
       - id: check-added-large-files
+        stages: [pre-commit]
       - id: check-merge-conflict
+        stages: [pre-commit]
       # Refuses a commit containing an AWS key, a private key, and similar. Not a
       # substitute for keeping secrets in .env, but it catches the obvious slip.
       - id: detect-private-key
+        stages: [pre-commit]
 
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 26.5.1
     hooks:
       - id: black
+        stages: [pre-commit]
         args: ["--line-length=120"]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 9.0.1
     hooks:
       - id: isort
+        stages: [pre-commit]
         args: ["--profile=black", "--line-length=120"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
+        stages: [pre-commit]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (full suite)
+        entry: pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

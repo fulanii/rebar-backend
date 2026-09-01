@@ -225,7 +225,7 @@ class TestAdoptingAnExistingAccount:
         The attack this guards against:
 
         1. An attacker registers the victim's address with a password they choose. The
-           account exists, inactive, unverified -- they cannot verify it.
+           account exists, inactive, unverified, they cannot verify it.
         2. The victim later signs in with Google. The row is adopted and activated.
         3. The attacker's password still works, and they now hold a live account.
         """

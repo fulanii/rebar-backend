@@ -1,6 +1,6 @@
 # Recipe: add an app
 
-An "app" is one self-contained feature area — `billing`, `projects`, `notifications`.
+An "app" is one self-contained feature area, `billing`, `projects`, `notifications`.
 Keep `authentication` for accounts and put your product in new apps beside it.
 
 ---
@@ -24,7 +24,7 @@ touch billing/urls.py billing/throttles.py
 
 ---
 
-## 2. Register it — `config/settings/base.py`
+## 2. Register it, `config/settings/base.py`
 
 ```python
 INSTALLED_APPS = [
@@ -34,11 +34,11 @@ INSTALLED_APPS = [
 ]
 ```
 
-Django will not see the app — or its models, or its migrations — until it is listed.
+Django will not see the app, or its models, or its migrations, until it is listed.
 
 ---
 
-## 3. Mount its URLs — `config/urls.py`
+## 3. Mount its URLs, `config/urls.py`
 
 ```python
 path("billing/", include("billing.urls")),
@@ -52,7 +52,7 @@ Your app may import from `authentication` **only** through the public seams:
 
 ```python
 from django.contrib.auth import get_user_model   # yes
-from django.conf import settings                 # settings.AUTH_USER_MODEL -- yes
+from django.conf import settings                 # settings.AUTH_USER_MODEL, yes
 
 from authentication.models import CustomUser     # no
 ```
@@ -77,7 +77,7 @@ Add rates to `DEFAULT_THROTTLE_RATES` in `config/settings/base.py` and classes i
 
 Mirror the structure in `billing/tests/`. The fixtures in the root `conftest.py`
 (`api_client`, `auth_client`, `base_user`, …) are available to every app
-automatically — you do not need to redefine them.
+automatically, you do not need to redefine them.
 
 App-specific fixtures go in `billing/tests/conftest.py`.
 
@@ -88,7 +88,7 @@ nothing and silently never run:
 testpaths = ["authentication", "billing", "config"]
 ```
 
-Every app owns its own tests. There is no project-wide test folder — `config/tests/`
+Every app owns its own tests. There is no project-wide test folder, `config/tests/`
 exists only for the schema guards, which check routing and the docs configuration
 rather than any single app.
 
@@ -96,6 +96,6 @@ rather than any single app.
 
 ## 7. Add its docs
 
-If the app has non-obvious rules — anything involving money, permissions, or state
-machines especially — write them down in `docs/`. The next person to touch it will
+If the app has non-obvious rules (anything involving money, permissions, or state
+machines especially) write them down in `docs/`. The next person to touch it will
 be an assistant reading exactly what you left behind.

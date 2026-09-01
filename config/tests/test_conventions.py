@@ -1,7 +1,7 @@
 """
 Guards on the house style, where a violation is cheap to make and slow to notice.
 
-Only rules worth a failing build live here -- the rest of docs/ai/conventions.md is
+Only rules worth a failing build live here, the rest of docs/ai/conventions.md is
 read by people and by assistants, not enforced.
 """
 
@@ -25,7 +25,7 @@ def view_modules():
 
 def test_one_view_per_file():
     """
-    A module with two views in it is a module to split -- see docs/ai/conventions.md.
+    A module with two views in it is a module to split, see docs/ai/conventions.md.
 
     The rule exists so that a file's name tells you what is in it, and so two
     endpoints are never edited as one blob. `jwt_tokens.py` broke it once with three.

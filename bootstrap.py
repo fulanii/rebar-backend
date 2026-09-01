@@ -12,7 +12,7 @@ Creates .env, .env.staging and .env.prod with fresh secret keys and removes the
 documentation title, gitignores the boilerplate's docs, deletes the boilerplate's git
 history, renames the project folder to your project name, and deletes itself.
 
-It does not run `git init` -- that first commit is yours to make.
+It does not run `git init`, that first commit is yours to make.
 
 Run it once, immediately after cloning.
 
@@ -52,7 +52,7 @@ def rewrite_titles(name):
     readme = ROOT / "readme.md"
     if readme.exists():
         text = readme.read_text(encoding="utf-8")
-        text = text.replace("# SaaS Boilerplate — Backend", f"# {title} — Backend", 1)
+        text = text.replace("# SaaS Boilerplate Backend", f"# {title} Backend", 1)
         readme.write_text(text, encoding="utf-8")
 
 
@@ -64,7 +64,7 @@ def write_env_files():
     production sessions. Only .env is ever loaded; the other two are yours to fill in
     and copy from.
 
-    Each template is deleted once its real file exists -- the real file carries the
+    Each template is deleted once its real file exists, the real file carries the
     same variables, so keeping the template around would leave two nearly identical
     files and an obvious way to edit the wrong one. Existing files are never
     overwritten.
@@ -105,7 +105,7 @@ def ignore_boilerplate_files():
     """
     Keep the boilerplate's own documentation out of your repository.
 
-    `docs/` stays on disk -- you and your AI tools still read it -- it simply never
+    `docs/` stays on disk, where you and your AI tools still read it. It simply never
     enters your history.
 
     Delete the line from .gitignore if you would rather your team had it too.
@@ -147,7 +147,7 @@ def remove_git():
     Delete the boilerplate's history, leaving the folder with no repository at all.
 
     Your project is not a fork of mine and its history should not start as one. Run
-    `git init` yourself when you are ready -- the first commit is then genuinely yours,
+    `git init` yourself when you are ready, the first commit is then genuinely yours,
     made when you choose and with the name and email you meant to use.
     """
     git_dir = ROOT / ".git"
@@ -163,8 +163,8 @@ def clean_up_self():
     Remove this script and its marker, now that both have done their one job.
 
     Runs before the folder rename, while these paths still resolve. Deleting a running
-    script is safe -- Python has already read it -- and it is the last thing left that
-    belongs to the boilerplate rather than to you.
+    script is safe, because Python has already read it, and it is the last thing left
+    that belongs to the boilerplate rather than to you.
     """
     removed = []
     for path in (MARKER, Path(__file__).resolve()):
@@ -172,7 +172,7 @@ def clean_up_self():
             path.unlink()
             removed.append(path.name)
         except OSError as exc:
-            print(f"  warning: could not delete {path.name} ({exc.strerror}) -- delete it yourself")
+            print(f"  warning: could not delete {path.name} ({exc.strerror}). Delete it yourself")
     return removed
 
 
@@ -197,7 +197,7 @@ def rename_root(name):
     try:
         ROOT.rename(target)
     except OSError as exc:
-        print(f"  warning: could not rename the folder ({exc.strerror}) -- rename it yourself")
+        print(f"  warning: could not rename the folder ({exc.strerror}), rename it yourself")
         return None
 
     return target
@@ -209,7 +209,7 @@ def cd_into(project):
 
     A shell that was sitting inside the folder when it was renamed is now pointing at a
     path that no longer exists, so it has to climb out and back in. A shell that ran the
-    script from outside -- `python backend-saas-boilerplate/bootstrap.py my_saas` -- just
+    script from outside (`python backend-saas-boilerplate/bootstrap.py my_saas`) just
     walks in.
     """
     if project == STARTED_IN:
@@ -229,7 +229,7 @@ def main():
 
     if MARKER.exists():
         fail(
-            "an earlier run stopped partway -- .bootstrapped is still here.\n"
+            "an earlier run stopped partway, .bootstrapped is still here.\n"
             "  Check what it left behind, then delete .bootstrapped and run this again."
         )
 
@@ -241,23 +241,23 @@ def main():
     if created:
         print(f"  wrote {', '.join(created)}, each with its own fresh SECRET_KEY")
     if removed:
-        print(f"  removed {len(removed)} .example template(s) -- the real files replace them")
+        print(f"  removed {len(removed)} .example template(s), the real files replace them")
 
     cleared = clear_migrations()
     print(f"  cleared {cleared} boilerplate migration file(s)")
 
     ignored = ignore_boilerplate_files()
     if ignored:
-        print(f"  added {', '.join(ignored)} to .gitignore -- still on disk, just not committed")
+        print(f"  added {', '.join(ignored)} to .gitignore, still on disk, just not committed")
 
     rewrite_titles(args.name)
     print(f"  set the API documentation title to '{title_from(args.name)} API'")
 
     if remove_git():
-        print("  deleted the boilerplate's git history -- run `git init` when you are ready")
+        print("  deleted the boilerplate's git history. Run `git init` when you are ready")
 
     if clean_up_self():
-        print("  deleted bootstrap.py and its marker -- there is nothing left to run twice")
+        print("  deleted bootstrap.py and its marker. Nothing is left to run twice")
 
     # Last: everything above writes through the old path.
     renamed = rename_root(args.name)
@@ -267,8 +267,7 @@ def main():
     step = cd_into(renamed or ROOT)
     first_step = f"{step}\n    " if step else ""
 
-    print(
-        f"""
+    print(f"""
   Done. Next:
 
     {first_step}python -m venv .venv && source .venv/bin/activate
@@ -280,17 +279,16 @@ def main():
   Then open http://localhost:8000/docs/
 
   .env is the only file the app loads. .env.staging and .env.prod are yours to
-  fill in and copy from -- switch environment by changing DJANGO_SETTINGS_MODULE
+  fill in and copy from, switch environment by changing DJANGO_SETTINGS_MODULE
   inside .env, or set the values in your host's dashboard.
 
   This folder is no longer a git repository. Once the tests are green, `git init`
-  and make the first commit your own -- docs/getting-started.md walks through it.
+  and make the first commit your own, docs/getting-started.md walks through it.
 
   Configuration:  docs/configuration.md
   Deployment:     docs/deployment.md
   Before your first change: docs/ai/guardrails.md
-"""
-    )
+""")
 
 
 if __name__ == "__main__":

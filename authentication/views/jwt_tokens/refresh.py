@@ -31,7 +31,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 
         **Endpoint:** POST `token/refresh/`
 
-        **Authentication:** None required -- the refresh cookie *is* the credential.
+        **Authentication:** None required, the refresh cookie *is* the credential.
 
         **Throttle:** 30/minute per IP (`token_refresh` scope). Higher than the other
         limits because clients refresh on a timer.

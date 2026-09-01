@@ -135,7 +135,7 @@ class TestRegisterAtomicity:
     def test_no_account_survives_a_failure_while_issuing_the_code(self, api_client):
         """
         The user row and its verification code are written in one transaction, so a
-        half-registered account -- one that can never verify -- cannot be left behind.
+        half-registered account, one that can never verify, cannot be left behind.
         """
         with patch("authentication.views.user_registration.issue_code", side_effect=Exception("boom")):
             with pytest.raises(Exception, match="boom"):

@@ -51,7 +51,7 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         **Authentication:** None required
 
         **Throttle:** 20/hour per IP (`google_callback` scope). Its own scope, not the
-        `google_auth` one the other two Google endpoints share -- a single sign-in
+        `google_auth` one the other two Google endpoints share, a single sign-in
         spends one request here and two there, so one bucket would let the callback
         eat a third of every user's login budget.
 
@@ -75,7 +75,7 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         Both paths below are **string literals in this file**, not settings.
         `FRONTEND_URL` configures the host; the paths themselves do not move. Your
         frontend must serve a route at each one, spelled exactly like this. Rename
-        either in your app and Google sign-in breaks with nothing logged here --
+        either in your app and Google sign-in breaks with nothing logged here,
         the redirect succeeds, and the browser lands on your 404.
 
         | Path             | Reached on | Carries                                    |
@@ -97,7 +97,7 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
 
         ## Responses
 
-        ### 302 Found — success
+        ### 302 Found, success
         Redirects to `FRONTEND_URL/auth/callback#code=<one-time-code>`.
 
         The handoff code goes in the URL **fragment**, not the query string: fragments
@@ -106,13 +106,13 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         `auth/google/exchange/`.
 
         The code is single-use and expires after two minutes
-        (`EXCHANGE_TTL_SECONDS`), so the frontend must post it exactly once -- guard
+        (`EXCHANGE_TTL_SECONDS`), so the frontend must post it exactly once, guard
         against React StrictMode running an effect twice in development.
 
-        JWTs are deliberately not put in the URL at all -- they would land in browser
+        JWTs are deliberately not put in the URL at all, they would land in browser
         history and in the `Referer` header of the next request.
 
-        ### 302 Found — failure
+        ### 302 Found, failure
         Redirects to `FRONTEND_URL/login?error=google` for every failure: the user
         cancelled, `state` was missing/forged/already used, the code exchange failed,
         or Google returned no email. The reason is logged server-side; the browser is
@@ -126,7 +126,7 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
 
         ## Post-Request Flow
         1. Reject the request unless both `code` and `state` are present.
-        2. Look up `state` and **delete it immediately** -- it is single-use, so a
+        2. Look up `state` and **delete it immediately**: it is single-use, so a
            captured callback URL cannot be replayed.
         3. Exchange the code for Google's tokens (server-to-server, using the client
            secret) and cryptographically verify the returned `id_token`.

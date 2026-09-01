@@ -1,7 +1,7 @@
 # Recipe: send an email
 
 All email goes through `authentication/utils/email/`. The package picks a provider
-from `EMAIL_PROVIDER` and hands it a template id and some variables — there is no HTML
+from `EMAIL_PROVIDER` and hands it a template id and some variables. There is no HTML
 anywhere in the codebase.
 
 ```
@@ -18,11 +18,11 @@ themselves.
 
 ## 1. Create and activate the template
 
-Before writing any code. Note its id, and decide which variables it needs — the keys
+Before writing any code. Note its id, and decide which variables it needs, the keys
 are case-sensitive, and the convention here is capitals: `FIRST_NAME`, `CODE`.
 
 Brevo ids are integers, Resend's are strings. **Activate (Brevo) or publish (Resend)
-the template** — a draft cannot be sent.
+the template**, a draft cannot be sent.
 
 ---
 
@@ -76,7 +76,7 @@ send_welcome_email(user.email, user.first_name)
 ```
 
 No `try` needed. `_send` never raises: a provider outage is logged and the user's
-request still succeeds. That is deliberate — a signup should not fail with a 500
+request still succeeds. That is deliberate, a signup should not fail with a 500
 because an email service had a bad minute.
 
 Which means: **never rely on the return value for correctness.** If the email must
@@ -104,7 +104,7 @@ cares that an email was attempted needs no provider setup. Use `.brevo_send` or
 `.resend` when you need the actual arguments.
 
 Test that the right variables are sent. Whether the template *renders* nicely is the
-provider's side — check that by sending yourself one from their dashboard.
+provider's side, check that by sending yourself one from their dashboard.
 
 Never write a test that hits a provider for real. It is slow, flaky, costs quota, and
 fails whenever their API is down.
@@ -113,7 +113,7 @@ fails whenever their API is down.
 
 ## Adding a provider
 
-One file and one dict entry — see the end of
+One file and one dict entry, see the end of
 [../../email-templates.md](../../email-templates.md).
 
 ---
@@ -131,7 +131,7 @@ Three things can be missing, and they log differently:
 All are expected locally before you have set anything up. Any of them in production
 means users are not receiving that email.
 
-For registration you do not need email working at all — the account exists either way.
+For registration you do not need email working at all, the account exists either way.
 The code is hashed in the database and cannot be read back, so to test the full flow
 either set a real API key, or temporarily log the raw code in the registration view
 and remove that line before committing. Never log codes in a deployed environment.
@@ -143,7 +143,7 @@ and remove that line before committing. Never log codes in a deployed environmen
 Nowhere near the request. `_send` **queues** the message and returns; the Celery task
 in `authentication/tasks.py` calls the provider and retries on failure.
 
-You do not have to think about this when adding an email — write the sender function
+You do not have to think about this when adding an email, write the sender function
 as above and it is queued like the rest. Two consequences are worth knowing:
 
 - **The return value means "queued", not "delivered."** It is `False` only when the

@@ -36,7 +36,7 @@ survives contact with a second project. Resend's editor is nicer; if you are onl
 ever shipping one product, either is fine.
 
 Switching provider is one line in `.env` plus rebuilding the four templates. Nothing
-in the code changes — the variable names are identical on both sides.
+in the code changes, the variable names are identical on both sides.
 
 You only need the package for the provider you use. Remove the other from
 `requirements.txt` if you like.
@@ -55,29 +55,29 @@ you use:
 
 | Key | Type | Example | Notes |
 |---|---|---|---|
-| `FIRST_NAME` | string | `Jane` | Never empty — registration requires a name. |
+| `FIRST_NAME` | string | `Jane` | Never empty, registration requires a name. |
 | `CODE` | string | `004821` | **A string, not a number.** Codes can start with zero. |
 | `EXPIRY_MINUTES` | number | `15` | Read from the code model, so the email cannot promise a window the code does not honour. |
 
 **Password changed** is a notification, not a code, so it receives `FIRST_NAME` alone.
-Do not reference `CODE` or `EXPIRY_MINUTES` in it — they are not sent, and most
+Do not reference `CODE` or `EXPIRY_MINUTES` in it: they are not sent, and most
 template engines render a missing variable as an empty string rather than failing.
 
-## Building them — Brevo
+## Building them, Brevo
 
 1. **Transactional → Templates → New template.**
 2. Set the sender and the subject on the template itself; the backend does not send
    either.
 3. In the body, insert variables as `{{ params.FIRST_NAME }}`, `{{ params.CODE }}`,
-   `{{ params.EXPIRY_MINUTES }}`. The `params.` prefix is required — a bare
+   `{{ params.EXPIRY_MINUTES }}`. The `params.` prefix is required, a bare
    `{{ CODE }}` renders empty.
 4. **Save and activate it.** An inactive template will not send.
 5. The template id is the number in the list (`3`, `4`, …). Put it in `.env`.
 
-## Building them — Resend
+## Building them, Resend
 
 1. Create a template and note its id.
-2. Add the three variables, matching the keys exactly — they are case-sensitive.
+2. Add the three variables, matching the keys exactly. They are case-sensitive.
 3. Insert them with the editor's variable control rather than typing placeholder
    syntax by hand.
 4. **Publish it.** A template left in `draft` cannot be sent.
@@ -88,7 +88,7 @@ template engines render a missing variable as an empty string rather than failin
 Not rules, but these three earn their place:
 
 - **The code itself, large and easy to copy.** It is the only reason the email exists.
-- **How long it lasts** — use `EXPIRY_MINUTES` rather than writing "15" into the copy,
+- **How long it lasts.** Use `EXPIRY_MINUTES` rather than writing "15" into the copy,
   or the two drift the first time someone changes the model.
 - **"If you did not request this, ignore this email."** Password-reset emails reach
   people who did not ask for them; that line is what stops them worrying.
@@ -97,7 +97,7 @@ The **email change** template goes to an address that has never heard of you, so
 which account is moving and make it obvious what to do if it is not theirs: doing
 nothing is the correct action, and the code expires on its own.
 
-The **password changed** template is the opposite — it is read by someone who did not
+The **password changed** template is the opposite: it is read by someone who did not
 act. Say what changed, say when, and give them somewhere to go if it was not them.
 That email is often the first sign an account has been taken, and everything it can
 prompt (reset the password, contact support) is worth spelling out. It should not
@@ -105,14 +105,14 @@ contain a code or a one-click link: an email that can undo a password change is 
 second way into the account.
 
 Keep the HTML simple. Email clients strip `<style>` blocks and understand roughly
-2003-era HTML — inline styles, simple layouts, no flexbox or grid.
+2003-era HTML, inline styles, simple layouts, no flexbox or grid.
 
 Never put anything in these emails you would not want in a screenshot: they are
 forwarded, quoted, and sit in inboxes for years.
 
 ## When something is missing
 
-Nothing is sent, and the reason is logged. There is no fallback body — one path means
+Nothing is sent, and the reason is logged. There is no fallback body, one path means
 what users receive is always what you see in the dashboard, with no second, untested
 version of each email hiding in the code.
 
@@ -128,7 +128,7 @@ after moving to Brevo is refused rather than sent as garbage.
 
 The practical consequence is that **`VERIFICATION_TEMPLATE_ID` must exist before
 anyone can register**, because verification is part of signing up. The account is
-still created when the email fails — only the code does not arrive, and the user can
+still created when the email fails, only the code does not arrive, and the user can
 request another one once the configuration is fixed. Build the other three before your
 first real user: without them a password reset cannot be completed, an email address
 cannot be changed, and nobody is told when their password changes.

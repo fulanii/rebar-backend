@@ -39,7 +39,7 @@ class EmailChangeRequestView(APIView):
 
         The address on the account does not change here. It changes when the code is
         submitted to `POST auth/change-email/confirm/`, which is what proves the new
-        address is yours -- the same proof registration asks for.
+        address is yours, the same proof registration asks for.
 
         ---
 
@@ -60,7 +60,7 @@ class EmailChangeRequestView(APIView):
         - Must not belong to a **verified** account.
 
         ### password
-        - Required. Your current password, even though the request is authenticated --
+        - Required. Your current password, even though the request is authenticated,
           an access token alone must not be enough to take over the login address.
         - Accounts that sign in with Google have no password and cannot use this
           endpoint; changing the address would break the link to the Google identity.

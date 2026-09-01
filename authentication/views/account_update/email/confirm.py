@@ -38,7 +38,7 @@ class EmailChangeConfirmView(APIView):
 
         **Throttle:** 5/hour per user (`email_change` scope)
 
-        On success the login address changes. Existing sessions keep working -- you
+        On success the login address changes. Existing sessions keep working, you
         are signed in and gave your password to start this, so the sessions are yours.
 
         ---
@@ -54,7 +54,7 @@ class EmailChangeConfirmView(APIView):
         ## Field Validation Rules
 
         ### code
-        - Required, exactly 6 characters, digits only. Send as a string -- `"004821"`.
+        - Required, exactly 6 characters, digits only. Send as a string, `"004821"`.
         - Five wrong guesses burn the code; start again at `POST auth/change-email/`.
 
         ---
@@ -106,7 +106,7 @@ class EmailChangeConfirmView(APIView):
         ## Post-Request Flow
         1. `is_valid` rejects a used, expired or exhausted code before the hash check.
         2. A wrong code is counted; the fifth burns it.
-        3. Availability is checked again -- the code was issued minutes ago and the
+        3. Availability is checked again, the code was issued minutes ago and the
            address may have been verified by someone else since.
         4. The code is burned and the address is updated in one transaction.
         """
