@@ -1,126 +1,87 @@
-# SaaS Boilerplate Backend
+# Rebar Backend
 
-**The backend every SaaS rebuilds from scratch: accounts, billing, admin and waitlist,
-built once, properly, and tested.** Clone it, rename it, start building the product you
-actually wanted to build.
+**The reinforcement inside your SaaS.** Pour whatever product you like on top. The part
+underneath that has to hold (accounts, billing, an admin panel, a waitlist) is already
+built, already tested, and waiting for you.
 
-Django REST Framework, Python 3.13, PostgreSQL, Redis, Celery.
-
-**Authentication ships today**, complete and covered by **407 tests**: register →
-verify → sign in → reset → Google → sign out, with the security decisions already made
-and written down. Billing on Stripe, an admin back-office and a waitlist are the layers
-landing next, built to the same standard.
-
-It is also built to be worked on **through AI tools**, which is a different problem
-from being readable. Every rule an assistant could get wrong is written down in
-[`docs/ai/guardrails.md`](docs/ai/guardrails.md), 16 of them, each with the failure it
-causes, and [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) point your assistant at
-them the moment it opens the repo. The structure is regular enough that it cannot
-invent a second way to do anything, and the build fails if it tries.
+Django REST Framework · Python 3.13 · PostgreSQL · Redis · Celery
 
 ---
 
-## Running in about a minute
+## Why Rebar Backend
 
-```bash
-git clone <this repo>
-python backend-saas-boilerplate/bootstrap.py my_saas
-cd my_saas
+**Do not vibe-code your backend.** Ship the product with whatever tools you like. But
+the piece holding your users' passwords, sessions and card details is the one piece
+where "it looks like it works" is not good enough, and where the mistakes are silent
+until the day they are not. This part is written by a backend engineer, deliberately,
+not generated and hoped over.
 
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
+**Your AI agent can extend this without quietly breaking it.** That is the whole point
+of how it is built. Every file sits where the pattern says it should, sixteen
+guardrails spell out the mistakes an assistant makes here and what each one costs, and
+`CLAUDE.md` and `AGENTS.md` hand it those rules the moment it opens the repository. Ask
+for a new endpoint and it copies the shape already in front of it. If it takes a
+shortcut anyway, the build stops it, because a route with no rate limit or an endpoint
+with no documentation fails on its own.
 
-python manage.py makemigrations && python manage.py migrate
-python manage.py runserver
-```
+**The decisions you would not know you had to make are already made.** Resetting a
+password really does throw an intruder out, on every device, immediately. A stolen
+login link cannot be reused. Somebody cannot claim your user's account by signing up
+with their email address first. Codes emailed to people expire, and stop working after
+five wrong guesses, so nobody can sit there trying a million of them. None of that is
+obvious, all of it is the sort of thing you find out after it has gone wrong, and each
+one is held in place by a test.
 
-Open **http://localhost:8000/docs/** for the API reference, generated from the code.
-SQLite, no database to install, no services to run, and `pytest` should be green
-before you go any further.
+**Finished, not a starting point you still have to finish.** Registration, email
+verification, sign-in, password reset, changing an email address, deleting an account,
+Google sign-in, and sessions that log out properly. Eighteen endpoints, and 407 tests
+that spend most of their effort on the ways it can go wrong rather than the way it goes
+right.
 
-**📖 [Documentation](docs/)**, setup, configuration, deployment, and the house rules.
-
----
-
-## Shipped
-
-**Authentication and accounts**, eighteen endpoints, [the full list](docs/endpoints.md).
-
-| | |
-|---|---|
-| **Accounts** | Register with name, email, US phone and password. Update your profile, change your email address, delete your account. Unverified addresses cannot be squatted. |
-| **Email verification** | 6-digit code, hashed at rest, single-use, 15-minute expiry, dead after 5 wrong guesses. Resending invalidates the previous code. |
-| **Passwords** | Reset by emailed code, which signs out every device, access tokens included; change while signed in, current password required. Both email a notification. |
-| **Google sign-in** | Server-side redirect flow. Works on mobile, where the popup button does not. |
-| **Sessions** | Access token in the body, refresh token in an httpOnly cookie, rotation with blacklisting, real logout. |
-| **Suspension** | Enforced on every request, not just at login. |
-| **Rate limits** | Every route, with its own scope. A test fails if a view forgets one. |
-| **Email delivery** | Brevo or Resend, chosen by one env var. Templates live in their dashboard. |
-| **Background jobs** | Celery. Email is queued, retried with backoff, and never blocks a request. Runs inline until you set a broker. |
-| **API reference** | Swagger at `/docs/`, generated from the code, development only. |
-| **Project setup** | Four settings modules, `bootstrap.py`, CI, pre-commit, and the `docs/ai/` rule set. |
+**It behaves like a real deployment, not a demo.** Background workers so sending email
+never slows a signup, separate settings for development, staging and production,
+Brevo or Resend for email, CI, and an API reference generated from the code itself.
 
 ---
 
-## Landing next
+## Get started
 
-Not started yet, and listed here so you know where this is going rather than as a
-promise of dates. The [roadmap](docs/roadmap.md) has the detail.
+### 📖 [**Read the documentation**](docs/README.md)
 
-| | |
-|---|---|
-| **Billing** | Stripe subscriptions: a free trial plus three plans, with the trial length, plan names and prices yours to configure rather than hardcoded. Checkout, the customer portal, webhooks, plan changes, and a permission class for gating paid features. |
-| **Admin back-office** | A permissioned API over the whole product (user lookup, suspension, subscription and support actions) with roles through Django groups, so support work never means a Django admin login on production. |
-| **Core** | The parts every SaaS has and nobody enjoys writing: a waitlist, contact and feedback capture, and the small shared pieces the other apps sit on. |
-
-Each lands as its own app beside `authentication/`, to the same standard: failure paths
-tested, rate limits on every route, and a guardrail written down for anything an
-assistant would get wrong.
+Setup, every environment variable, email templates, background jobs, deployment, and
+the house rules. Go straight to [getting started](docs/getting-started.md) to run it,
+or the [endpoint list](docs/endpoints.md) to see exactly what you get.
 
 ---
 
-## Why this one
+## What is coming
 
-**The security decisions are already made, and written down.** A password reset kills
-every session including live access tokens. A 6-digit code dies after five wrong
-guesses, so the rate limit is not the only thing between an attacker and a million
-combinations. Refresh tokens never touch a response body. An unverified account cannot
-squat someone else's email address. None of these are obvious, all of them are the kind
-of thing you discover after shipping, and each one is pinned by a test that fails if it
-is removed.
-
-**The tests cover what goes wrong**, not just what goes right, expired codes, replayed
-codes, forged OAuth state, suspended accounts, mass-assignment attempts, and every
-message that must not reveal whether an email is registered.
-
-**It stays honest as it grows.** The build fails if a routed view has no rate limit, if
-a module declares two views, if a view method has no docstring, or if the OpenAPI
-schema emits a single warning. Those guards exist because each one has already caught
-something real, and they apply to the apps that have not been written yet.
+Billing on Stripe, with a free trial plus three plans whose length, names and prices
+are yours to configure. An admin back-office, so support work never means a Django
+admin login against production. A core app for the waitlist and the other pieces every
+product ends up needing. Each arrives to the same standard as the auth layer. The
+[roadmap](docs/roadmap.md) has the detail, including what is deliberately left out.
 
 ---
 
 ## License
 
-[MIT](LICENSE). Use it commercially, modify it, ship it closed-source. No attribution
-in your product required. It is provided as is, with no warranty and no liability:
-what you deploy and how you secure it is yours.
-
-Keep the `LICENSE` file if you redistribute the boilerplate itself. If you are building
-your own product on it, replace it with whatever licence your product needs.
+[MIT](LICENSE). Use it commercially, modify it, ship it closed-source, no attribution
+required. Provided as is, with no warranty and no liability: what you deploy, and how
+you secure it, is yours.
 
 ---
 
 ## Found this useful?
 
-**Give it a star**, it costs you a click and it genuinely helps other people find it.
+**Give it a star.** It costs you a click and it genuinely helps other people find it.
 
-I'm **Yassine**, a backend engineer, and I'm **open to backend work**, Django/DRF/FastAPI
-APIs, Stripe and payments, third-party integrations, and taking a prototype the rest
-of the way to production.
+I'm **Yassine**, a backend engineer, and I'm **open to backend work**: Django, DRF and
+FastAPI APIs, Stripe and payments, third-party integrations, and taking a prototype the
+rest of the way to production.
 
 - Portfolio: **[yassinecodes.dev](https://yassinecodes.dev)**
 - Email: **[yassine@yassinecodes.dev](mailto:yassine@yassinecodes.dev)**
 
-Happy to hear about contract work, a full-time role, or just what you ended up
-building with this.
+Happy to hear about contract work, a full-time role, or just what you ended up building
+with this.

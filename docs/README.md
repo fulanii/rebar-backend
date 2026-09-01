@@ -15,5 +15,5 @@ Start with what you are trying to do.
 | **Deploy it** | [deployment.md](deployment.md) |
 | **Branch, open a pull request, merge** | [git-workflow.md](git-workflow.md) |
 | **Know what is built and what is coming** | [roadmap.md](roadmap.md) |
-| **Change the code, or point an AI tool at it** | [ai/](ai/) |
+| **Change the code, or point an AI tool at it** | [ai/README.md](ai/README.md) |
 | **Look up a word I do not know** | [ai/glossary.md](ai/glossary.md) |

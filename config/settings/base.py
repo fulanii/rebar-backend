@@ -179,7 +179,7 @@ EMAIL_MAX_RETRIES = 0 if IF_TESTING else 3
 ENABLE_API_DOCS = False
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "SaaS Boilerplate API",
+    "TITLE": "Rebar API",
     "DESCRIPTION": (
         "Django REST Framework backend with email-first JWT authentication, "
         "6-digit email verification, password reset, and Google OAuth."

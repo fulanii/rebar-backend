@@ -7,7 +7,7 @@ before it worked.
 
 ```bash
 git clone <this repo>
-python backend-saas-boilerplate/bootstrap.py my_saas
+python rebar-backend/bootstrap.py my_saas
 cd my_saas
 ```
 

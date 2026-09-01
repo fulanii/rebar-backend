@@ -49,7 +49,7 @@ else:
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "saas-boilerplate-dev",
+        "LOCATION": "rebar-dev",
     },
 }
 

@@ -2,7 +2,7 @@
 """
 Turn this boilerplate into your project.
 
-    python backend-saas-boilerplate/bootstrap.py my_saas
+    python rebar-backend/bootstrap.py my_saas
 
 Run it from the folder above, not from inside: the last thing it does is rename the
 folder, and a shell standing in a renamed folder is left pointing at nothing.
@@ -46,13 +46,13 @@ def rewrite_titles(name):
     settings_base = ROOT / "config" / "settings" / "base.py"
     if settings_base.exists():
         text = settings_base.read_text(encoding="utf-8")
-        text = text.replace('"TITLE": "SaaS Boilerplate API"', f'"TITLE": "{title} API"')
+        text = text.replace('"TITLE": "Rebar API"', f'"TITLE": "{title} API"')
         settings_base.write_text(text, encoding="utf-8")
 
     readme = ROOT / "readme.md"
     if readme.exists():
         text = readme.read_text(encoding="utf-8")
-        text = text.replace("# SaaS Boilerplate Backend", f"# {title} Backend", 1)
+        text = text.replace("# Rebar Backend", f"# {title} Backend", 1)
         readme.write_text(text, encoding="utf-8")
 
 
@@ -209,7 +209,7 @@ def cd_into(project):
 
     A shell that was sitting inside the folder when it was renamed is now pointing at a
     path that no longer exists, so it has to climb out and back in. A shell that ran the
-    script from outside (`python backend-saas-boilerplate/bootstrap.py my_saas`) just
+    script from outside (`python rebar-backend/bootstrap.py my_saas`) just
     walks in.
     """
     if project == STARTED_IN:

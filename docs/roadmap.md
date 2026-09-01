@@ -17,7 +17,7 @@ email is registered.
 
 **Supporting infrastructure**: Brevo or Resend for email chosen by one variable, Celery
 so no email is sent inside a request, four settings modules, CI, pre-commit,
-`bootstrap.py`, and the [`ai/`](ai/) rule set.
+`bootstrap.py`, and the [`ai/`](ai/README.md) rule set.
 
 [endpoints.md](endpoints.md) lists every route; the [readme](../readme.md) has the
 summary table.
