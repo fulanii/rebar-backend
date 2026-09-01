@@ -60,7 +60,19 @@ class CustomTokenRefreshView(TokenRefreshView):
         ```
 
         ### 401 Unauthorized
-        No cookie, or a token that is expired, malformed, or already rotated away:
+        No cookie, or a token that is expired, malformed, or already rotated away.
+
+        **Two tabs refreshing at once land here.** They share one cookie, rotation
+        lets exactly one of them win, and the other arrives holding a token that was
+        blacklisted moments earlier. There is no grace window: the loser gets this
+        401. It is not treated as a breach, so nothing else is revoked, and the
+        response deliberately carries **no** `Set-Cookie`, which leaves the winning
+        tab's token in place and the session alive.
+
+        Handle it in the client by serialising refreshes: hold a single in-flight
+        refresh promise and let every other caller await it, rather than each tab
+        firing its own. Treating any 401 from this endpoint as "signed out" will sign
+        people out of a session that is working.
 
         ```json
         {
