@@ -22,5 +22,7 @@ class UserListResponseSerializer(serializers.ModelSerializer):
             "auth_provider",
             "date_joined",
             "last_login",
+            "is_staff",
+            "is_superuser",
         ]
         read_only_fields = fields
