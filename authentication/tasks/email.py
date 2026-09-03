@@ -32,6 +32,10 @@ def send_email(self, to_email, template_id, variables):
 
     The name is pinned rather than derived from the module path. A queued job names its
     task as a string, so a task that moves file loses the jobs already waiting for it.
+
+    The module is `email.py`, not `send_email.py`, on purpose: a module that shares its
+    name with the task inside it shadows that task for `mock.patch`, which resolves a
+    dotted path to the module first.
     """
     self.max_retries = settings.EMAIL_MAX_RETRIES
 

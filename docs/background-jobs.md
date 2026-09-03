@@ -21,7 +21,7 @@ POST /auth/register/          worker
 ## What is queued today
 
 Only email. All four templates go through one task,
-[`authentication/tasks/send_email.py`](../authentication/tasks/send_email.py) → `send_email`.
+[`authentication/tasks/email.py`](../authentication/tasks/email.py) → `send_email`.
 
 Nothing else in this project is slow enough to be worth queueing. Resist the urge to
 queue things that are fast: a job you cannot see is harder to debug than a function
@@ -124,4 +124,4 @@ with patch("authentication.tasks.send_email.delay") as queued:
 assert queued.call_count == 1
 ```
 
-See `authentication/tests/tasks/test_send_email.py`.
+See `authentication/tests/tasks/test_email.py`.
