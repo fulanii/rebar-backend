@@ -2,7 +2,7 @@
 
 from django.urls import get_resolver
 
-OURS = ("authentication", "config")
+OURS = ("administration", "authentication", "config")
 
 
 def routed_views(ours_only=True):

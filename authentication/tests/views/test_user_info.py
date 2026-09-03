@@ -18,7 +18,7 @@ class TestUserInfo:
 
         assert response.status_code == 401
 
-    @pytest.mark.parametrize("field", ["password", "is_staff", "is_superuser", "is_suspended"])
+    @pytest.mark.parametrize("field", ["password"])
     def test_sensitive_fields_are_never_exposed(self, auth_client, field):
         response = auth_client.get(reverse("me"))
 

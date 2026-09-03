@@ -38,7 +38,7 @@ def test_every_view_method_has_a_docstring():
 
             # Third-party views mounted in development (the Swagger pages) are not
             # ours to document.
-            if not view_class.__module__.startswith(("authentication", "config")):
+            if not view_class.__module__.startswith(("administration", "authentication", "config")):
                 continue
 
             for method in HTTP_METHODS:

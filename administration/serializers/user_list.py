@@ -1,12 +1,12 @@
-"""The user profile shape, returned by every endpoint that identifies someone."""
+"""The account shape returned by the admin user list."""
 
 from rest_framework import serializers
 
 from authentication.models import CustomUser
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
-    """Only fields a user may see about themselves. Never add permission flags here."""
+class UserListResponseSerializer(serializers.ModelSerializer):
+    """One row of the admin list. Read-only, and never a credential or a code."""
 
     class Meta:
         model = CustomUser
@@ -16,11 +16,11 @@ class UserInfoSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
-            "is_verified",
             "is_active",
+            "is_verified",
+            "is_suspended",
             "auth_provider",
             "date_joined",
-            "is_staff",
-            "is_superuser",
+            "last_login",
         ]
         read_only_fields = fields

@@ -49,12 +49,12 @@ class TestConfiguredRates:
     def test_the_documented_rate_is_configured(self, settings, scope, expected):
         assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"][scope] == expected
 
-    def test_every_scope_has_a_throttle_class(self, settings):
-        declared = set(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"])
+    def test_every_scope_has_a_throttle_class(self):
+        """This app's scopes only. Another app's rates are that app's to test."""
         ours = [c for c in vars(throttles).values() if isinstance(c, type) and c.__module__ == throttles.__name__]
         used = {c.scope for c in ours}
 
-        assert declared == used, "a rate without a class does nothing, and vice versa"
+        assert set(RATES) == used, "a rate without a class does nothing, and vice versa"
 
 
 class TestUnauthenticatedEndpoints:
