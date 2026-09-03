@@ -30,7 +30,8 @@ authentication/
 ├── utils/        cookies, code generation, email, Google helpers
 ├── tests/        mirrors the structure above: tests/models, tests/views, ...
 ├── auth.py       the project-wide authentication class
-├── tasks.py      background jobs; email is queued, never sent in the request
+├── tasks/        background jobs, one per file; email is queued, never sent
+│                 in the request
 ├── throttles.py  one throttle class per named rate scope
 └── urls.py       routes, mounted in config/urls.py
 ```

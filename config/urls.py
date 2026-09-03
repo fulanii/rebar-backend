@@ -11,6 +11,7 @@ urlpatterns = [
     path("token/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
     path("token/blacklist/", CustomTokenBlacklistView.as_view(), name="token_blacklist"),
     path("auth/", include("authentication.urls")),
+    # path("admin/", include("administration.urls"))
 ]
 
 if settings.ENABLE_API_DOCS:

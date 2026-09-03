@@ -141,7 +141,7 @@ and remove that line before committing. Never log codes in a deployed environmen
 ## Where the sending happens
 
 Nowhere near the request. `_send` **queues** the message and returns; the Celery task
-in `authentication/tasks.py` calls the provider and retries on failure.
+in `authentication/tasks/send_email.py` calls the provider and retries on failure.
 
 You do not have to think about this when adding an email, write the sender function
 as above and it is queued like the rest. Two consequences are worth knowing:

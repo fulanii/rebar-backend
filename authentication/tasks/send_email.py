@@ -1,4 +1,4 @@
-"""Background jobs. One task per kind of slow work. See docs/background-jobs.md."""
+"""Hand one templated email to the provider. See docs/background-jobs.md."""
 
 import logging
 
@@ -16,6 +16,7 @@ class EmailNotDelivered(Exception):
 
 @shared_task(
     bind=True,
+    name="authentication.tasks.send_email",
     autoretry_for=(EmailNotDelivered,),
     retry_backoff=30,
     retry_backoff_max=600,
@@ -28,6 +29,9 @@ def send_email(self, to_email, template_id, variables):
     Arguments are plain JSON, never a model instance: the worker is a separate process
     that may pick this up seconds later, so anything passed by value must still make
     sense then. Never put a raw code in a log line from here.
+
+    The name is pinned rather than derived from the module path. A queued job names its
+    task as a string, so a task that moves file loses the jobs already waiting for it.
     """
     self.max_retries = settings.EMAIL_MAX_RETRIES
 

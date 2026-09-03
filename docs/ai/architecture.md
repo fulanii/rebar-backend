@@ -29,7 +29,7 @@ authentication/views/…       the endpoint
     ├──▶ serializers/…       validate input, shape output
     ├──▶ models/…            read and write the database
     ├──▶ utils/…             cookies, codes, Google
-    └──▶ tasks.py            queue slow work ─────▶ Celery worker (another process)
+    └──▶ tasks/              queue slow work ─────▶ Celery worker (another process)
     │                                                  │
     ▼                                                  └─ sends the email, retries
 HTTP response                                             if the provider is down
@@ -48,7 +48,7 @@ A view can assume `request.user` is a real, active, unsuspended user whenever it
 | `serializers/` | Validate incoming JSON; decide what goes back out. | Query across the app. Send email. |
 | `views/` | Handle one endpoint: call a serializer, call a util, return a response. | Contain validation logic. |
 | `utils/` | Reusable pieces with no HTTP knowledge: hashing a code, setting a cookie. | Import views. |
-| `tasks.py` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances, a worker may run it seconds later, in another process. |
+| `tasks/` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances, a worker may run it seconds later, in another process. |
 | `throttles.py` | One class per rate limit scope. | Anything else. |
 | `auth.py` | Decide who the caller is. | Decide what they may do. |
 
