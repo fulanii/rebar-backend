@@ -1,4 +1,4 @@
-# Runs on every pull request into main or staging. All five steps must pass.
+# Runs on every pull request into main or staging. All steps must pass.
 # It runs against the STAGING settings, not dev: that is the closest thing to
 # production the suite can safely run under, so a setting that only works in dev
 # fails here instead of at deploy time.

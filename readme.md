@@ -17,8 +17,8 @@ until the day they are not. This part is written by a backend engineer, delibera
 not generated and hoped over.
 
 **Your AI agent can extend this without quietly breaking it.** That is the whole point
-of how it is built. Every file sits where the pattern says it should, sixteen
-guardrails spell out the mistakes an assistant makes here and what each one costs, and
+of how it is built. Every file sits where the pattern says it should, the guardrails
+spell out the mistakes an assistant makes here and what each one costs, and
 `CLAUDE.md` and `AGENTS.md` hand it those rules the moment it opens the repository. Ask
 for a new endpoint and it copies the shape already in front of it. If it takes a
 shortcut anyway, the build stops it, because a route with no rate limit or an endpoint
@@ -34,9 +34,9 @@ one is held in place by a test.
 
 **Finished, not a starting point you still have to finish.** Registration, email
 verification, sign-in, password reset, changing an email address, deleting an account,
-Google sign-in, and sessions that log out properly. Eighteen endpoints, and 407 tests
-that spend most of their effort on the ways it can go wrong rather than the way it goes
-right.
+Google sign-in, and sessions that log out properly. Every endpoint an account needs,
+and a test suite that spends most of its effort on the ways each one can go wrong
+rather than the way it goes right.
 
 **It behaves like a real deployment, not a demo.** Background workers so sending email
 never slows a signup, separate settings for development, staging and production,

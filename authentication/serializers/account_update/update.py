@@ -3,8 +3,7 @@
 from rest_framework import serializers
 
 from authentication.models import CustomUser
-
-from ..validators import validate_name
+from authentication.serializers.validators import validate_name
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

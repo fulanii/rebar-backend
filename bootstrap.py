@@ -264,7 +264,12 @@ def main():
     if renamed:
         print(f"  renamed the folder to {renamed.name}/")
 
-    step = cd_into(renamed or ROOT)
+    print_next_steps(renamed or ROOT)
+
+
+def print_next_steps(project):
+    """The closing instructions, with the `cd` line only when the folder moved."""
+    step = cd_into(project)
     first_step = f"{step}\n    " if step else ""
 
     print(f"""

@@ -306,3 +306,84 @@ password from one.
 It means "has verified their email". Registration deliberately creates users with
 `is_active=False`, and Django's own auth refuses to authenticate them. Repurposing it
 for something else in your product silently lets unverified accounts sign in.
+
+---
+
+## 17. `..` in an import is a bug waiting for the next file move
+
+**The temptation:** the validator is two folders up, and `from ...validators import
+validate_password_strength` is shorter than writing the path out.
+
+**What it breaks:** two things, and the second one is the expensive one. Dots are
+counted against a tree that is four levels deep in places, so two dots where three
+belong resolves to a different module or to nothing, and the traceback names the
+import, not the miscount. And the count is only correct for one location: move the
+file one folder deeper, or pull a flow out into its own subpackage, and every relative
+import in it silently means something else.
+
+**Do this instead:** one dot for a file in the *same folder*, the full path from the
+app for anything else.
+
+```python
+from .validators import validate_name                                # same folder
+from authentication.serializers.validators import validate_name      # anywhere else
+```
+
+`config/tests/test_conventions.py` fails the build on any import with two dots or
+more, and on a full path that names a file sitting right next to the importer.
+
+**The one place a package import will not do.** From outside a layer, import the
+package, `from authentication.views import UserLoginView`. But a module reaching a
+neighbour *inside its own layer* has to name the module:
+
+```python
+# authentication/serializers/google_auth/exchange.py
+from authentication.serializers.user_info import UserInfoSerializer   # yes
+from authentication.serializers import UserInfoSerializer             # ImportError
+```
+
+`serializers/__init__.py` is still executing when it pulls in `google_auth`, so
+`UserInfoSerializer` is not bound on the half-built package yet and Python raises
+`cannot import name ... from partially initialized module`. Reordering `__init__.py`
+does not fix it either, isort sorts those lines alphabetically and `google_auth` will
+always come before `user_info`.
+
+---
+
+## 18. One view per file, and definitions that fit on a screen
+
+**The temptation:** the new endpoint is a close cousin of the one already in the file,
+so it goes underneath it. The method that handles it grows a branch, then another.
+
+**What it breaks:** nothing at runtime, which is the problem, it is a slow loss. A
+file named for one endpoint that holds three stops telling you where anything is, and
+the three get edited as one blob, so a change meant for one of them lands on all
+three. A 90-line `post()` cannot be read at a glance, which means the failure paths in
+it stop being read at all, and those are the paths that matter in an auth flow.
+
+**The limits, all enforced by `config/tests/test_conventions.py`:**
+
+| | |
+|---|---|
+| One view class per file | Two `*View` classes in a module fails the build |
+| Function or method | **50 lines** of code |
+| Class | **70 lines** of code |
+
+Docstrings and blank lines do not count towards either limit, so the house API
+docstring on a view method is free, and the numbers are what a reader actually has to
+hold in their head. They sit either side of the usual advice, Google's Python style
+guide suggests breaking up a function past about 40 lines, and pylint's default module
+ceiling is 1000, which is far too loose to be a rule.
+
+Serializers and models are looser on purpose. A request and its response shape are one
+endpoint's contract and belong in one file, `UserLoginRequestSerializer` next to
+`UserLoginResponseSerializer`, and `CustomUser` keeps `CustomUserManager` beside it.
+Test classes are exempt from the class limit, they group cases rather than model
+anything, and a long one means thorough coverage.
+
+**Do this instead:** when a view file grows a second endpoint, turn it into a
+subpackage, one file per endpoint plus `shared.py` for what they have in common. That
+is why `google_auth/`, `verifications/`, `jwt_tokens/` and `account_update/` are
+folders rather than modules. When a method grows past the limit, the branch that
+handles the failure case is almost always the piece that wants extracting, and
+`authentication/utils/` is where it goes if two views need it.

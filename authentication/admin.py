@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from authentication.models import CustomUser, EmailVerification, PasswordReset
+from .models import CustomUser, EmailVerification, PasswordReset
 
 
 @admin.register(CustomUser)

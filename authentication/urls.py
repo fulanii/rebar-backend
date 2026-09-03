@@ -7,7 +7,7 @@ because the refresh cookie is scoped to that path.
 
 from django.urls import path
 
-from authentication.views import (
+from .views import (
     AccountDeletionView,
     EmailChangeConfirmView,
     EmailChangeRequestView,

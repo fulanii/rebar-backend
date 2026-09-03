@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from ...validators import validate_password_strength, validate_verification_code
+from authentication.serializers.validators import validate_password_strength, validate_verification_code
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

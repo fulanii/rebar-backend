@@ -60,14 +60,71 @@ The one thing that does move is a **`patch()` target in a test**: those name a m
 path, so `authentication.views.google_oauth.foo` becomes
 `authentication.views.google_auth.callback.foo`.
 
-Import from the **package**, never the module:
+---
+
+## Size
+
+A definition that does not fit on a screen is a definition doing more than one thing.
+
+| | |
+|---|---|
+| Function or method | **50 lines** of code |
+| Class | **70 lines** of code |
+| View classes per file | **one** |
+
+Docstrings and blank lines are not counted, so the API docstring on a view method is
+free and the number is what a reader has to hold in their head.
+`config/tests/test_conventions.py` enforces all three.
+
+Past the limit, the fix is the same one the layout already uses. A view file that
+grew a second endpoint becomes a subpackage, one file per endpoint plus `shared.py`.
+A method that grew past fifty lines gives up its failure-path branch to a helper, in
+`utils/` if a second view needs it too.
+
+Two exceptions, both deliberate. A request shape and its response shape are one
+endpoint's contract and share a file, and a model keeps its manager beside it. Test
+classes are exempt from the class limit: they group cases rather than model anything.
+
+---
+
+## Imports
+
+Two rules, and neither of them produces a `..`.
+
+**Same folder, single dot.** A module reaches the file next to it, and a package
+`__init__.py` reaches the modules it re-exports, with one leading dot:
 
 ```python
-from authentication.views import UserLoginView      # yes
-from authentication.views.user_login import UserLoginView   # no
+# in authentication/serializers/user_registration.py
+from .validators import validate_name          # yes
 ```
 
-That keeps the file layout an implementation detail you can reorganize later.
+**Anywhere else, the full path from the app.** Crossing a layer, or reaching up out of
+a subfolder, is written out in full:
+
+```python
+# in authentication/serializers/account_update/password/change.py
+from authentication.serializers.validators import validate_password_strength   # yes
+from ...validators import validate_password_strength                           # no
+```
+
+`...` is banned. Counting dots against a tree four levels deep is how a file ends up
+importing from the wrong place, and the dots have to be recounted every time a file
+moves.
+
+From **outside** a layer, import the package, never the module underneath it:
+
+```python
+from authentication.views import UserLoginView               # yes
+from authentication.views.user_login import UserLoginView    # no
+```
+
+That keeps the file layout an implementation detail you can reorganize later. The
+exception is a module reaching a neighbour inside its own layer, which must name the
+module, `from authentication.serializers.user_info import UserInfoSerializer`. The
+package import fails there: `serializers/__init__.py` is still executing when it pulls
+in `google_auth`, so `UserInfoSerializer` is not bound yet and Python raises
+`ImportError: partially initialized module`.
 
 ---
 

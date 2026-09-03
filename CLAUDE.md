@@ -9,7 +9,8 @@ difference between a change that ships and one that quietly breaks logins.
 ## Layout
 
 ```
-config/          settings (base/dev/staging/prod), root urls, middleware, schema tests
+config/          settings (base/dev/staging/prod), root urls, middleware,
+                 and the tests that guard the conventions
 authentication/  accounts, JWT, verification, passwords, email change,
                  account deletion, Google OAuth
 docs/            endpoints, configuration, email templates, background jobs,
@@ -17,7 +18,9 @@ docs/            endpoints, configuration, email templates, background jobs,
 docs/ai/         how to work here, architecture, conventions, guardrails, recipes
 ```
 
-Inside an app, every layer is a package of small modules, one concern per file:
+One app per domain. A new one sits beside `authentication/` and copies its shape,
+`docs/ai/recipes/add-an-app.md` has the steps. Inside an app, every layer is a package
+of small modules, one concern per file:
 
 ```
 authentication/
@@ -51,34 +54,19 @@ suite runs on every push, so the same checks happen whether or not you remember.
 
 ## Hard rules
 
-1. **Never put the refresh token in a response body.** It goes in the httpOnly
-   cookie via `authentication/utils/cookies.py`. Only the access token is returned.
-2. **Never weaken or remove a throttle, or the `MAX_ATTEMPTS` counter on a code.**
-   Together they are what make a 6-digit code safe to email, the throttle stops one
-   IP, the counter stops a thousand. Fix the test instead.
-3. **A completed password reset revokes every session**, refresh tokens *and*
-   already-issued access tokens, via `revoke_sessions()`. It is how a reset actually
-   locks an intruder out, see guardrail 12.
-4. **Text fields are `blank=True`, never `null=True`.** Absent means `""`.
-5. **Every HTTP method on a view needs a docstring** in the house format, it *is*
-   the API documentation and a test enforces it. See `docs/ai/conventions.md`.
-6. **Never edit a migration that has already been applied.** Make a new one.
-7. **No secrets in code**, including in docstring examples. They go in the
-   gitignored `.env`.
-8. **Authentication endpoints must not reveal whether an email is registered.**
-   Wrong password, unknown address, expired code and a code out of attempts all
-   return the same message.
-9. **Add tests with every endpoint.** Cover the failure paths, not just the success.
-10. **Never adopt an unverified account without discarding its password**, see
-    guardrail 11. A social login proves the address, not the password on the row, and
-    registering an address nobody verified takes that account over outright.
-11. **Never commit or push to `main` or `staging`.** Branch, push the branch, open a
-    pull request. Those two branches deploy, and CI only runs on pull requests. See
-    `docs/git-workflow.md`.
-12. **Do not add explanatory comments.** This codebase is almost comment-free by
-    design, reasoning lives in `docs/`, not above the line. One-line module
-    docstrings, tool directives and view API docstrings only. See
-    `docs/ai/conventions.md`.
+They are not listed here. Kept in two places they drift, and the copy an assistant
+reads is the one that goes stale. Each lives in exactly one file:
+
+| | |
+|---|---|
+| [`docs/ai/guardrails.md`](docs/ai/guardrails.md) | **Read before your first change.** The mistakes that leave the tests green and the app apparently working: the refresh token, the throttles, session revocation, what an auth endpoint may reveal, account takeover, migrations, secrets. |
+| [`docs/ai/conventions.md`](docs/ai/conventions.md) | The house style, and it is enforced: file layout, imports, size limits, the API docstring on every method, and why there are no explanatory comments. |
+| [`docs/git-workflow.md`](docs/git-workflow.md) | Never commit or push to `main` or `staging`. Branch, push the branch, open a pull request. Those two branches deploy, and CI only runs on pull requests. |
+
+Read the first two before touching anything. Most of what they say is enforced by
+`config/tests/`, so a shortcut fails the build rather than reaching production, but the
+build only catches what somebody thought to write a test for. The reasoning is in the
+docs, and the reasoning is the part that stops you making a new mistake.
 
 ## Where things go
 

@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from ..user_info import UserInfoSerializer
+from authentication.serializers.user_info import UserInfoSerializer
 
 
 class GoogleOAuthExchangeRequestSerializer(serializers.Serializer):
