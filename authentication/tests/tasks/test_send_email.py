@@ -53,7 +53,7 @@ class TestSendEmailTask:
 
 class TestWorkIsHandedOver:
     def test_registration_queues_the_email(self, api_client):
-        with patch("authentication.tasks.send_email.delay") as queued:
+        with patch("authentication.tasks.send_email") as queued:
             response = api_client.post(
                 reverse("register"),
                 {
