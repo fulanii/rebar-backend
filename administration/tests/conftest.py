@@ -25,14 +25,17 @@ def staff_user(db, user_password):
 
 
 @pytest.fixture
-def admin_client(api_client, staff_user):
+def admin_client(staff_user):
     """
-    A client authenticated as `staff_user`.
+    A client authenticated as `staff_user`, and its own client.
 
-    Skips token validation, so tests *about* authentication send a real token instead.
+    Its own, because a test that wants two operators at once would otherwise get one:
+    `force_authenticate` on a shared client rebinds it, and the second fixture silently
+    wins. Skips token validation, so tests *about* authentication send a real token.
     """
-    api_client.force_authenticate(user=staff_user)
-    return api_client
+    client = APIClient()
+    client.force_authenticate(user=staff_user)
+    return client
 
 
 @pytest.fixture
@@ -88,7 +91,8 @@ def superuser(db, user_password):
 
 
 @pytest.fixture
-def superuser_client(api_client, superuser):
-    """A client authenticated as `superuser`."""
-    api_client.force_authenticate(user=superuser)
-    return api_client
+def superuser_client(superuser):
+    """A client authenticated as `superuser`, on its own client for the same reason."""
+    client = APIClient()
+    client.force_authenticate(user=superuser)
+    return client

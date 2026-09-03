@@ -36,6 +36,9 @@ class GoogleOAuthLoginView(BrowserOAuthErrorMixin, APIView):
         Point a link or `window.location` at this URL, do not fetch() it. It is a
         navigation, and the browser must actually travel to Google.
 
+        Takes **no body, no path parameters and no query parameters**. The `state` value
+        that comes back to `auth/google/callback/` is generated here, not supplied.
+
         ---
 
         ## Responses

@@ -22,12 +22,13 @@ class UserUpdateView(GenericAPIView):
     throttle_classes = [AdminWriteRateThrottle]
     serializer_class = UserUpdateRequestSerializer
     queryset = CustomUser.objects.all()
+    lookup_url_kwarg = "user_id"
 
     def patch(self, request, *args, **kwargs):
         """
         Change one account on its owner's behalf.
 
-        **Endpoint:** PATCH `admin/users/{id}/update/`
+        **Endpoint:** PATCH `admin/users/{user_id}/update/`
 
         **Authentication:** JWT required, and the account must be a **superuser**
 
@@ -44,6 +45,16 @@ class UserUpdateView(GenericAPIView):
         **No password field, deliberately.** An operator who can set a password can sign
         in as the customer, and the audit trail cannot tell that apart from support
         work. Send the customer a reset instead, so they prove the address themselves.
+
+        ---
+
+        ## Path parameters
+
+        | Name | Type | Description |
+        |---|---|---|
+        | `user_id` | integer | The **account being edited**, as `id` from `admin/users/`. |
+
+        Never the id of the superuser making the call.
 
         ---
 
@@ -72,7 +83,7 @@ class UserUpdateView(GenericAPIView):
         ## Responses
 
         ### 200 OK
-        The full account, in the same shape as `admin/users/{id}/`:
+        The full account, in the same shape as `admin/users/{user_id}/`:
 
         ```json
         {

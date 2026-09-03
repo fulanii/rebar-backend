@@ -22,6 +22,7 @@ class UserLoginRequestSerializer(serializers.Serializer):
     default_error_messages = {
         "invalid_credentials": "Incorrect email or password.",
         "not_verified": "Please verify your email address before signing in.",
+        "suspended": "Your account is suspended.",
     }
 
     def validate(self, attrs):
@@ -35,6 +36,9 @@ class UserLoginRequestSerializer(serializers.Serializer):
 
             if user is None or not user.check_password(password):
                 self.fail("invalid_credentials")
+
+        if user.is_suspended:
+            self.fail("suspended")
 
         if not (user.is_active and user.is_verified):
             self.fail("not_verified")

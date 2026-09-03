@@ -19,12 +19,13 @@ class UserDetailView(RetrieveAPIView):
     throttle_classes = [AdminReadRateThrottle]
     serializer_class = UserDetailResponseSerializer
     queryset = CustomUser.objects.all()
+    lookup_url_kwarg = "user_id"
 
     def get(self, request, *args, **kwargs):
         """
         One account, by id.
 
-        **Endpoint:** GET `admin/users/{id}/`
+        **Endpoint:** GET `admin/users/{user_id}/`
 
         **Authentication:** JWT required, and the account must be staff
 
@@ -40,13 +41,15 @@ class UserDetailView(RetrieveAPIView):
         that 404 is itself an answer, which is why the route is useless without the
         staff check above.
 
+        Takes **no body and no query parameters**.
+
         ---
 
         ## Path parameters
 
         | Name | Type | Description |
         |---|---|---|
-        | `id` | integer | The account's primary key, as returned by `admin/users/`. |
+        | `user_id` | integer | The **account to read**, as `id` from `admin/users/`. |
 
         ---
 

@@ -28,7 +28,9 @@ class UserInfoView(APIView):
         **Throttle:** 60/minute per user (`user_info` scope), clients call this on
         every page load to rehydrate their session.
 
-        Read-only. There is no profile-update endpoint.
+        Takes **no body, no path parameters and no query parameters**. The account
+        returned is whichever one the access token belongs to, never an id you pass in;
+        reading somebody else's account is `admin/users/{user_id}/`, which is staff only.
 
         ---
 

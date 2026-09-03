@@ -58,6 +58,25 @@ class GoogleOAuthCallbackView(BrowserOAuthErrorMixin, APIView):
         **Called by Google, not by your frontend.** Register this exact URL as an
         authorized redirect URI on the Google OAuth client.
 
+        Takes **no body**. Everything arrives in the query string, put there by Google.
+
+        ---
+
+        ## Query parameters
+
+        Sent by Google, never by you. All three are optional here because a failed or
+        tampered-with consent arrives with a different set than a successful one.
+
+        | Name | Type | Description |
+        |---|---|---|
+        | `code` | string | One-time authorization code, exchanged server side for
+          Google's tokens. Present on success. |
+        | `state` | string | The opaque value generated at `auth/google/login/` and
+          cached. Matched and consumed here, which is what proves the callback belongs
+          to a sign-in this server started. |
+        | `error` | string | Google's failure reason, `access_denied` when the person
+          declined consent. Present instead of `code`. |
+
         ---
 
         ## Query Parameters
