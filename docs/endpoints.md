@@ -47,12 +47,16 @@ address bar.
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/auth/login/` | None | Access token + profile, refresh cookie set |
-| POST | `/token/` | None | Standard SimpleJWT token pair; only use `/auth/login/` |
 | POST | `/token/refresh/` | cookie | New access token from the cookie |
 | POST | `/token/blacklist/` | cookie | Sign out |
 
-These four live at `/token/` rather than `/auth/` because the refresh cookie is scoped
-to that path, the browser only sends it there. Moving them breaks refresh and logout.
+`/auth/login/` is the only endpoint that mints a token pair. SimpleJWT's own
+`POST /token/` is deliberately not routed: a second door onto the same credentials is a
+second place for every rule about them to be forgotten.
+
+The other two live at `/token/` rather than `/auth/` because the refresh cookie is
+scoped to that path, the browser only sends it there. Moving them breaks refresh and
+logout.
 
 ## Development only
 

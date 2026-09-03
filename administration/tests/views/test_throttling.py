@@ -13,6 +13,7 @@ from administration import throttles
 
 RATES = {
     "admin_read": "120/minute",
+    "admin_write": "60/minute",
 }
 
 

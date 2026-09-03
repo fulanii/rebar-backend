@@ -106,11 +106,3 @@ class TestLastLogin:
 
         base_user.refresh_from_db()
         assert base_user.last_login is None
-
-    def test_the_token_endpoint_records_it_too(self, api_client, base_user, user_password):
-        api_client.post(
-            reverse("token_obtain_pair"), {"email": base_user.email, "password": user_password}, format="json"
-        )
-
-        base_user.refresh_from_db()
-        assert base_user.last_login is not None

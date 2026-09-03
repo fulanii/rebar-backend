@@ -3,6 +3,8 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
+from authentication.models import CustomUser
+
 from .user_info import UserInfoSerializer
 
 
@@ -24,21 +26,18 @@ class UserLoginRequestSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         email = attrs["email"].strip().lower()
+        password = attrs["password"]
 
-        user = authenticate(
-            request=self.context.get("request"),
-            username=email,
-            password=attrs["password"],
-        )
+        user = authenticate(request=self.context.get("request"), username=email, password=password)
 
         if user is None:
-            from authentication.models import CustomUser
+            user = CustomUser.objects.filter(email=email).first()
 
-            pending = CustomUser.objects.filter(email=email, is_active=False).first()
-            if pending is not None and pending.check_password(attrs["password"]):
-                self.fail("not_verified")
+            if user is None or not user.check_password(password):
+                self.fail("invalid_credentials")
 
-            self.fail("invalid_credentials")
+        if not (user.is_active and user.is_verified):
+            self.fail("not_verified")
 
         attrs["user"] = user
         return attrs

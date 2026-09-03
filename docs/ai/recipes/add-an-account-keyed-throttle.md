@@ -55,8 +55,9 @@ an attacker.
 throttle_classes = [LoginRateThrottle, LoginPerAccountRateThrottle]
 ```
 
-Do the same on `CustomTokenObtainPairView` in `views/jwt_tokens/obtain.py`, it takes
-the same credentials, so leaving it alone leaves the door open.
+`auth/login/` is the only route that takes credentials, so that is the only place the
+class has to go. If a second one is ever added, it needs the same pair of throttles on
+the same day, or the limit is one route wide and the other is open.
 
 ## 4. Tests
 

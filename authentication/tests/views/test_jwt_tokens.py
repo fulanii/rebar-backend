@@ -14,30 +14,6 @@ def login(client, user, password):
     return client.post(reverse("login"), {"email": user.email, "password": password}, format="json")
 
 
-class TestTokenObtain:
-    def test_returns_access_and_sets_the_cookie(self, api_client, base_user, user_password):
-        response = api_client.post(
-            reverse("token_obtain_pair"),
-            {"email": base_user.email, "password": user_password},
-            format="json",
-        )
-
-        assert response.status_code == 200
-        assert response.data["access"]
-        assert "refresh" not in response.data
-        assert REFRESH_COOKIE_NAME in response.cookies
-
-    def test_bad_credentials_set_no_cookie(self, api_client, base_user):
-        response = api_client.post(
-            reverse("token_obtain_pair"),
-            {"email": base_user.email, "password": "WrongPass123!"},
-            format="json",
-        )
-
-        assert response.status_code == 401
-        assert REFRESH_COOKIE_NAME not in response.cookies
-
-
 class TestConcurrentRefresh:
     """
     Two tabs refreshing at once, both holding the cookie the browser shares between

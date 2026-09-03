@@ -10,7 +10,7 @@ from .account_update import (
     ProfileUpdateView,
 )
 from .google_auth import GoogleOAuthCallbackView, GoogleOAuthExchangeView, GoogleOAuthLoginView
-from .jwt_tokens import CustomTokenBlacklistView, CustomTokenObtainPairView, CustomTokenRefreshView
+from .jwt_tokens import CustomTokenBlacklistView, CustomTokenRefreshView
 from .user_info import UserInfoView
 from .user_login import UserLoginView
 from .user_registration import UserRegistrationView
@@ -25,7 +25,6 @@ __all__ = [
     "GoogleOAuthLoginView",
     "GoogleOAuthCallbackView",
     "GoogleOAuthExchangeView",
-    "CustomTokenObtainPairView",
     "CustomTokenRefreshView",
     "CustomTokenBlacklistView",
     "PasswordResetRequestView",

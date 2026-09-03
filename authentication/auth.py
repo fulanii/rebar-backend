@@ -22,6 +22,9 @@ class SuspensionAwareJWTAuthentication(JWTAuthentication):
         if user.is_suspended:
             raise AuthenticationFailed("Your account is suspended.", code="account_suspended")
 
+        if not user.is_verified:
+            raise AuthenticationFailed("Please verify your email address.", code="email_not_verified")
+
         if self.issued_before_revocation(user, validated_token):
             raise AuthenticationFailed("Your session has ended. Please sign in again.", code="session_revoked")
 

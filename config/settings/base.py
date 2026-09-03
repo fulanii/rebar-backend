@@ -128,6 +128,7 @@ REST_FRAMEWORK = {
         "account_deletion": "5/hour",
         "user_info": "60/minute",
         "admin_read": "120/minute",
+        "admin_write": "60/minute",
     },
 }
 

@@ -4,10 +4,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
-from authentication.views import CustomTokenBlacklistView, CustomTokenObtainPairView, CustomTokenRefreshView
+from authentication.views import CustomTokenBlacklistView, CustomTokenRefreshView
 
 urlpatterns = [
-    path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
     path("token/blacklist/", CustomTokenBlacklistView.as_view(), name="token_blacklist"),
     path("auth/", include("authentication.urls")),

@@ -12,7 +12,7 @@ from .account_update import (
 )
 from .common import DetailResponseSerializer
 from .google_auth import GoogleOAuthExchangeRequestSerializer, GoogleOAuthExchangeResponseSerializer
-from .jwt_tokens import TokenObtainPairResponseSerializer, TokenRefreshResponseSerializer
+from .jwt_tokens import TokenRefreshResponseSerializer
 from .user_info import UserInfoSerializer
 from .user_login import UserLoginRequestSerializer, UserLoginResponseSerializer
 from .user_registration import UserRegistrationRequestSerializer, UserRegistrationResponseSerializer
@@ -28,7 +28,6 @@ __all__ = [
     "ResendVerificationRequestSerializer",
     "GoogleOAuthExchangeRequestSerializer",
     "GoogleOAuthExchangeResponseSerializer",
-    "TokenObtainPairResponseSerializer",
     "TokenRefreshResponseSerializer",
     "PasswordChangeSerializer",
     "PasswordResetConfirmSerializer",

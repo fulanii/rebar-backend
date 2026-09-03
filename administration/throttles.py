@@ -7,3 +7,9 @@ class AdminReadRateThrottle(UserRateThrottle):
     """`120/minute`, read-only, an operator paging through a list."""
 
     scope = "admin_read"
+
+
+class AdminWriteRateThrottle(UserRateThrottle):
+    """`60/minute`, writes. Support edits one account at a time, a script does not."""
+
+    scope = "admin_write"
