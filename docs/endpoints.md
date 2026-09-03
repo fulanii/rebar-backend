@@ -58,13 +58,58 @@ The other two live at `/token/` rather than `/auth/` because the refresh cookie 
 scoped to that path, the browser only sends it there. Moving them breaks refresh and
 logout.
 
+## Administration
+
+Mounted at `/admin/`, beside Django's own admin page rather than under it.
+
+**Reading is staff, writing is superuser.** Support needs to look an account up;
+changing one, locking somebody out or deleting them is a different level of trust,
+and `is_staff` is a flag this API itself hands out.
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/admin/users/` | staff | Every account, cursor paginated, newest first |
+| GET | `/admin/users/{user_id}/` | staff | One account in full |
+| PATCH | `/admin/users/{user_id}/update/` | superuser | Correct an account on its owner's behalf |
+| POST | `/admin/users/{user_id}/suspension/` | superuser | Suspend, with a reason |
+| DELETE | `/admin/users/{user_id}/suspension/` | superuser | Reinstate; the record stays |
+| DELETE | `/admin/users/{user_id}/delete/` | superuser | Permanent, no undo |
+| GET | `/admin/suspensions/` | superuser | Every suspension ever issued |
+
+Every one of these confirms whether an address is registered, which every route under
+`/auth/` refuses to do. That is the point of them, and it is why the permission class
+has to be right on **every** route in the app rather than most of them.
+`config/tests/test_permissions.py` fails the build on any administration view that
+does not require at least staff, and `IsSuperUser` subclasses `IsAdminUser` so a
+route can only ever be made stricter than that floor, never looser by accident.
+
+**Suspension is a record, not a flag.** Suspending writes a row saying who did it, why
+and when, and reinstating closes that row rather than deleting it. An account
+suspended and reinstated three times has three rows. `is_suspended` on the account is
+the current state; `/admin/suspensions/` is the history.
+
+**Suspension takes effect on the account's very next request**, including one carrying
+an access token minted a second earlier, because `authentication/auth.py` reads the
+flag on every request rather than trusting the token. Nothing needs revoking. A
+suspended account is also refused at `/auth/login/`, so it cannot collect fresh tokens
+it would not be able to use.
+
+**Deleting is the only irreversible route here.** It takes the account's suspension
+history and its outstanding refresh tokens with it. Suspensions the account *issued*
+survive with `suspended_by` set to `null`, so the record of what an operator did
+outlives their account. Reach for suspension for anything short of an erasure request.
+
+Not built: an audit trail for the update endpoint, filters on either list, and any
+route for revoking sessions, triggering a reset or resending verification on somebody
+else's behalf. See [roadmap.md](roadmap.md).
+
 ## Development only
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/docs/` | Swagger UI |
 | GET | `/schema/` | The OpenAPI schema |
-| GET | `/admin/` | Django admin |
+| GET | `/admin/` | Django admin. Unmatched paths under `/admin/` fall through to it, so a malformed id redirects to its login page rather than answering 404 |
 
 All three are mounted only when `ENABLE_API_DOCS` is on, which is the `dev` settings
 module and nothing else. They 404 in staging and production.

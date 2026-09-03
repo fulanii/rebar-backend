@@ -13,6 +13,8 @@ config/          settings (base/dev/staging/prod), root urls, middleware,
                  and the tests that guard the conventions
 authentication/  accounts, JWT, verification, passwords, email change,
                  account deletion, Google OAuth
+administration/  the operator's API over those accounts: lookup, correction,
+                 suspension, deletion
 docs/            endpoints, configuration, email templates, background jobs,
                  deployment, git
 docs/ai/         how to work here, architecture, conventions, guardrails, recipes
@@ -33,6 +35,7 @@ authentication/
 ├── tasks/        background jobs, one per file; email is queued, never sent
 │                 in the request
 ├── throttles.py  one throttle class per named rate scope
+├── permissions.py  who may reach a route, when the built-in classes do not say it
 └── urls.py       routes, mounted in config/urls.py
 ```
 

@@ -51,6 +51,8 @@ A view can assume `request.user` is a real, active, unsuspended user whenever it
 | `tasks/` | Work that must not happen in a request. Takes ids, returns nothing useful. | Take model instances, a worker may run it seconds later, in another process. |
 | `throttles.py` | One class per rate limit scope. | Anything else. |
 | `auth.py` | Decide who the caller is. | Decide what they may do. |
+| `permissions.py` | Decide what the caller may do, per route. | Decide who they are. |
+| `pagination.py` | One class per list endpoint, cursor based. | Filter or order for a feature. |
 
 **Validation belongs in serializers, not views.** A view that checks a field itself
 is a rule that will not apply the next time that field is accepted somewhere else.

@@ -387,3 +387,57 @@ is why `google_auth/`, `verifications/`, `jwt_tokens/` and `account_update/` are
 folders rather than modules. When a method grows past the limit, the branch that
 handles the failure case is almost always the piece that wants extracting, and
 `authentication/utils/` is where it goes if two views need it.
+
+---
+
+## 19. An administration route without its permission class is an enumeration oracle
+
+**The temptation:** the endpoint is under `/admin/`, the frontend only shows it to
+operators, and the new route is a harmless read. `IsAuthenticated` looks like enough.
+
+**What it breaks:** every endpoint under `/auth/` is written so that it cannot be used
+to discover which addresses are registered, see guardrail 4. Every endpoint under
+`/admin/` does the opposite on purpose, because that is what looking an account up
+means. So one administration route reachable by an ordinary signed-in user undoes the
+non-disclosure of the entire authentication app, and nothing about the response looks
+wrong: it answers correctly, to the wrong person.
+
+A 404 is an answer too. `admin/users/{user_id}/` returning "no such account" tells the
+caller which ids exist, so the permission check has to run *before* the lookup, which
+is what `IsAdminUser` on the view does and a check inside the handler would not.
+
+**Do this instead:** every view in `administration/` requires at least `IsAdminUser`,
+and `config/tests/test_permissions.py` fails the build on any that does not. Reading is
+staff; anything that writes takes `IsSuperUser` from `administration/permissions.py`,
+which **subclasses** `IsAdminUser` rather than replacing it, so the floor the guard
+checks for is the same floor a stricter route stands on, and a route can only ever be
+tightened, never loosened by accident.
+
+Two flags decide all of this, `is_staff` and `is_superuser`, and they are editable
+through `admin/users/{user_id}/update/`. That endpoint refuses to let anyone change
+their own, superusers included: the permission class cannot catch that case, because
+the caller genuinely is a superuser. What it stops is a taken account promoting itself
+or locking the real owner out.
+
+---
+
+## 20. Deleting an account deletes the evidence
+
+**The temptation:** an erasure request arrives, the account is deleted, the ticket is
+closed.
+
+**What it breaks:** `DELETE admin/users/{user_id}/delete/` is a hard delete, and
+everything with a cascade onto that row goes with it, including the account's
+**suspension history**. An account deleted after a fraud investigation takes the record
+of that investigation with it, so the question "why was this person locked out" stops
+having an answer at exactly the moment somebody asks it.
+
+Suspensions the account *issued* survive, with `suspended_by` set to `null`, because
+that foreign key is `SET_NULL`. What an operator did outlives their account on purpose,
+and a test pins it: change that to `CASCADE` and firing an operator quietly rewrites
+why every account they touched was locked.
+
+**Do this instead:** suspend rather than delete for anything short of an actual erasure
+request. Suspension locks the account out on its very next request, keeps the record,
+and can be undone. If you need the row gone but the history kept,
+[recipes/soft-delete-accounts.md](recipes/soft-delete-accounts.md) covers what changes.

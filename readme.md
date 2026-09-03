@@ -38,6 +38,12 @@ Google sign-in, and sessions that log out properly. Every endpoint an account ne
 and a test suite that spends most of its effort on the ways each one can go wrong
 rather than the way it goes right.
 
+**And the operator's side of those accounts**, because support work should not mean a
+Django admin login against production. Look an account up, correct it on its owner's
+behalf, suspend it with a reason that stays on record, reinstate it, or delete it for
+good. Reading is staff, writing is superuser, and the build fails on any route in that
+app that forgets to say so.
+
 **It behaves like a real deployment, not a demo.** Background workers so sending email
 never slows a signup, separate settings for development, staging and production,
 Brevo or Resend for email, CI, and an API reference generated from the code itself.
@@ -57,8 +63,8 @@ or the [endpoint list](docs/endpoints.md) to see exactly what you get.
 ## What is coming
 
 Billing on Stripe, with a free trial plus three plans whose length, names and prices
-are yours to configure. An admin back-office, so support work never means a Django
-admin login against production. A core app for the waitlist and the other pieces every
+are yours to configure. An audit trail behind the admin API, so every change to an
+account says who made it. A core app for the waitlist and the other pieces every
 product ends up needing. Each arrives to the same standard as the auth layer. The
 [roadmap](docs/roadmap.md) has the detail, including what is deliberately left out.
 

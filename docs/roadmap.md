@@ -15,6 +15,17 @@ five wrong guesses, a completed reset signs out every device including live acce
 tokens, an unverified address cannot be squatted, and no endpoint reveals whether an
 email is registered.
 
+**Administration**, the operator's half of accounts: search the user list, read one
+account in full, correct one on its owner's behalf, suspend and reinstate with a
+reason on record, read every suspension ever issued, and delete an account for good.
+Reading is staff, writing is superuser, and a project-level test fails the build on any
+route in that app that does not require at least staff.
+
+Suspension is a record rather than a flag: the row says who did it, why and when, and
+reinstating closes the row instead of erasing it. Deleting an account is the only
+irreversible route in the API and takes its suspension history with it, which is why
+the docstring points at suspension for anything short of an erasure request.
+
 **Supporting infrastructure**: Brevo or Resend for email chosen by one variable, Celery
 so no email is sent inside a request, four settings modules, CI, pre-commit,
 `bootstrap.py`, and the [`ai/`](ai/README.md) rule set.
@@ -33,7 +44,7 @@ No dates. The order below is roughly the order they are needed.
 | | |
 |---|---|
 | **Billing** | Stripe subscriptions: a free trial plus three plans, with the trial length, plan names and prices **yours to configure** rather than hardcoded. Checkout, the customer portal, webhooks, upgrades and downgrades, cancellation, and a permission class for gating paid features. |
-| **Admin back-office** | A permissioned API over the whole product (user lookup, suspension, subscription and support actions, audit of who did what) with roles through Django groups. Support work should never mean a Django admin login against production. |
+| **Admin, the rest of it** | An audit trail, which is the gap: suspension records itself, the update endpoint records nothing, so "who changed this address" has no answer. Then filters on the two lists (`is_staff`, `is_suspended`, `email` search), a route onto the existing `revoke_sessions()`, and support actions that trigger the ordinary password-reset and verification emails rather than editing flags by hand. Roles through Django groups, once there is more than one level to express. |
 | **Core** | The parts every SaaS has and nobody enjoys writing: a waitlist, contact and feedback capture, and the small shared pieces the other apps sit on. |
 
 ## Add it yourself
