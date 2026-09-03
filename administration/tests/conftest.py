@@ -74,3 +74,21 @@ def token_client():
         return client
 
     return make
+
+
+@pytest.fixture
+def superuser(db, user_password):
+    """A verified, active superuser: the only account the update endpoint accepts."""
+    return CustomUser.objects.create_superuser(
+        email="root@example.com",
+        password=user_password,
+        first_name="Root",
+        last_name="Person",
+    )
+
+
+@pytest.fixture
+def superuser_client(api_client, superuser):
+    """A client authenticated as `superuser`."""
+    api_client.force_authenticate(user=superuser)
+    return api_client

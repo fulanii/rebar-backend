@@ -62,3 +62,16 @@ class TestTheUserDetailIsThrottled:
             admin_client.get(reverse("admin-user-list"))
 
         assert admin_client.get(reverse("admin-user-detail", args=[base_user.pk])).status_code == 429
+
+
+@pytest.mark.django_db
+class TestTheUserUpdateIsThrottled:
+    def test_one_request_past_the_limit_is_refused(self, superuser_client, base_user, settings):
+        """Writes get their own budget, so paging through the list cannot exhaust it."""
+        url = reverse("admin-user-update", args=[base_user.pk])
+        limit = int(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["admin_write"].split("/")[0])
+
+        for _ in range(limit):
+            superuser_client.patch(url, {"first_name": "Janet"}, format="json")
+
+        assert superuser_client.patch(url, {"first_name": "Janet"}, format="json").status_code == 429
