@@ -9,8 +9,6 @@ non-disclosure into a formality.
 
 import pytest
 from django.urls import reverse
-from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from administration.serializers import UserListResponseSerializer
 
@@ -19,13 +17,6 @@ pytestmark = pytest.mark.django_db
 
 def url():
     return reverse("admin-user-list")
-
-
-def client_with_real_token(user):
-    """A client carrying a genuine access token, for tests of the authentication class."""
-    client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(user).access_token}")
-    return client
 
 
 class TestAccess:
@@ -39,12 +30,12 @@ class TestAccess:
     def test_a_staff_account_is_allowed_through(self, admin_client):
         assert admin_client.get(url()).status_code == 200
 
-    def test_a_suspended_staff_account_is_refused(self, staff_user):
+    def test_a_suspended_staff_account_is_refused(self, staff_user, token_client):
         """Suspension has to reach staff too, or revoking access leaves the list open."""
         staff_user.is_suspended = True
         staff_user.save(update_fields=["is_suspended"])
 
-        response = client_with_real_token(staff_user).get(url())
+        response = token_client(staff_user).get(url())
 
         assert response.status_code == 401
         assert response.data["code"] == "account_suspended"

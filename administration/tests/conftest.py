@@ -4,6 +4,8 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from authentication.models import CustomUser
 
@@ -53,5 +55,22 @@ def many_users(db):
             )
             for number in range(count)
         )
+
+    return make
+
+
+@pytest.fixture
+def token_client():
+    """
+    Builds a client carrying a genuine access token.
+
+    `force_authenticate` bypasses the authentication class, so a test of the suspension
+    gate, which lives in that class, has to send a real token instead.
+    """
+
+    def make(user):
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(user).access_token}")
+        return client
 
     return make

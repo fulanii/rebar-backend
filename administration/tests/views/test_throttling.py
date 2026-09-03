@@ -44,3 +44,20 @@ class TestTheUserListIsThrottled:
             admin_client.get(url)
 
         assert admin_client.get(url).status_code == 429
+
+
+@pytest.mark.django_db
+class TestTheUserDetailIsThrottled:
+    def test_it_shares_one_budget_with_the_list(self, admin_client, base_user, settings):
+        """
+        Both routes are the `admin_read` scope, so the limit is 120 across the pair.
+
+        Giving the detail route its own scope would double what one account can pull
+        out of the same table, which is the point of sharing the name.
+        """
+        limit = int(settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["admin_read"].split("/")[0])
+
+        for _ in range(limit):
+            admin_client.get(reverse("admin-user-list"))
+
+        assert admin_client.get(reverse("admin-user-detail", args=[base_user.pk])).status_code == 429
