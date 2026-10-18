@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # Local
     "authentication",
     "administration",
+    "core",
 ]
 
 MIDDLEWARE = [
@@ -129,6 +130,7 @@ REST_FRAMEWORK = {
         "user_info": "60/minute",
         "admin_read": "120/minute",
         "admin_write": "60/minute",
+        "core_announcement": "120/minute",
     },
 }
 
