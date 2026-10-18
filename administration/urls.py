@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    AnnouncementEditView,
     SuspensionListView,
     SuspensionView,
     UserDeleteView,
@@ -18,4 +19,5 @@ urlpatterns = [
     path("users/<int:user_id>/suspension/", SuspensionView.as_view(), name="admin-user-suspension"),
     path("users/<int:user_id>/delete/", UserDeleteView.as_view(), name="admin-user-delete"),
     path("suspensions/", SuspensionListView.as_view(), name="admin-suspension-list"),
+    path("announcement/", AnnouncementEditView.as_view(), name="admin-announcement"),
 ]

@@ -75,6 +75,9 @@ and `is_staff` is a flag this API itself hands out.
 | DELETE | `/admin/users/{user_id}/suspension/` | superuser | Reinstate; the record stays |
 | DELETE | `/admin/users/{user_id}/delete/` | superuser | Permanent, no undo |
 | GET | `/admin/suspensions/` | superuser | Every suspension ever issued |
+| GET | `/admin/announcement/` | staff | The site banner, hidden or not |
+| PUT | `/admin/announcement/` | superuser | Write the banner, creating it the first time |
+| DELETE | `/admin/announcement/` | superuser | Remove the banner |
 
 Every one of these confirms whether an address is registered, which every route under
 `/auth/` refuses to do. That is the point of them, and it is why the permission class
@@ -102,6 +105,25 @@ outlives their account. Reach for suspension for anything short of an erasure re
 Not built: an audit trail for the update endpoint, filters on either list, and any
 route for revoking sessions, triggering a reset or resending verification on somebody
 else's behalf. See [roadmap.md](roadmap.md).
+
+## Site
+
+Mounted at the root, from the `core` app: what every page of the product reads.
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/announcement/` | None | The active banner, or `null` |
+
+**There is one banner, and it is one row.** `Announcement` pins its primary key and the
+database refuses any other, so a second banner cannot exist, and it refuses an active
+banner with no text. Operators write it at `/admin/announcement/`; hiding it with
+`is_active: false` keeps the text, `DELETE` removes it.
+
+**The public read has no authentication at all**, not just `AllowAny`. It is fetched on
+the sign-in page by people whose token has expired, and with authentication on, a stale
+`Authorization` header would turn the banner into a 401. It never says who wrote the
+banner: that is on the admin endpoint, behind staff, because the editor is in
+`administration/` and everything there needs staff (guardrail 19).
 
 ## Development only
 
