@@ -47,7 +47,7 @@ class UserRegistrationView(APIView):
         | email            | string | Yes      | Login address. Lowercased and trimmed.           |
         | first_name       | string | Yes      | Given name.                                      |
         | last_name        | string | Yes      | Family name.                                     |
-        | phone_number     | string | Yes      | US number, any format. Stored as 10 digits.      |
+        | phone_number     | string | Yes      | Starts with `+` and the country code.            |
         | password         | string | Yes      | write_only. Never returned or logged.            |
         | confirm_password | string | Yes      | write_only. Must match `password`.               |
 
@@ -69,11 +69,13 @@ class UserRegistrationView(APIView):
         - Letters (any alphabet), spaces, hyphens and apostrophes only.
 
         ### phone_number
-        - Required. Non-digits are stripped, so `(555) 123-4567` and `+1 555 123 4567`
-          are both accepted.
-        - A leading `1` country code is removed; the result must be exactly 10 digits.
-        - Area code and exchange code may not begin with 0 or 1.
-        - Stored as raw digits, e.g. `"5551234567"`.
+        - Required, any country, and must start with `+` and the country code:
+          `+1 (201) 555-0123` and `+33 6 12 34 56 78` are accepted, `(201) 555-0123`
+          is not. Spaces, dashes, dots and brackets are fine.
+        - Checked against Google's libphonenumber rules, so a number of the right
+          length that cannot exist, such as one with area code `555`, is refused.
+        - At most 32 characters as typed.
+        - Stored in E.164, e.g. `"+12015550123"`. An extension is dropped.
 
         ### password
         - Required, 8-128 characters.
@@ -103,7 +105,7 @@ class UserRegistrationView(APIView):
         ```json
         {
             "email": ["An account with this email already exists."],
-            "phone_number": ["Enter a valid 10-digit US phone number."]
+            "phone_number": ["Start with + and the country code, e.g. +1 201 555 0123."]
         }
         ```
 

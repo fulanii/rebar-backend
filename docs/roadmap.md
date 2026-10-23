@@ -44,8 +44,32 @@ No dates. The order below is roughly the order they are needed.
 | | |
 |---|---|
 | **Billing** | Stripe subscriptions: a free trial plus three plans, with the trial length, plan names and prices **yours to configure** rather than hardcoded. Checkout, the customer portal, webhooks, upgrades and downgrades, cancellation, and a permission class for gating paid features. |
-| **Admin, the rest of it** | An audit trail, which is the gap: suspension records itself, the update endpoint records nothing, so "who changed this address" has no answer. Then filters on the two lists (`is_staff`, `is_suspended`, `email` search), a route onto the existing `revoke_sessions()`, and support actions that trigger the ordinary password-reset and verification emails rather than editing flags by hand. Roles through Django groups, once there is more than one level to express. |
+| **Admin, the rest of it** | An audit trail, which is the gap: suspension records itself, the update endpoint records nothing, so "who changed this address" has no answer. Then filters on the suspension list (the user list has them), a route onto the existing `revoke_sessions()`, and support actions that trigger the ordinary password-reset and verification emails rather than editing flags by hand. Roles through Django groups, once there is more than one level to express. |
 | **Core** | The parts every SaaS has and nobody enjoys writing: a waitlist, contact and feedback capture, and the small shared pieces the other apps sit on. |
+| **Phone verification** | SMS codes that set `is_phone_verified`. Everything around it is in place: numbers are validated and stored in international form, the flag exists, and the database already allows one verified owner per number. The rules it must follow are below. |
+
+### Phone verification: decided before it is built
+
+- **The SMS provider is pluggable**, an `SMS_PROVIDER` setting with Brevo and Twilio
+  behind it, the way `EMAIL_PROVIDER` works. With no API key, a send is skipped and
+  logged.
+- **Verification is optional and happens after signup.** Registration stays an email
+  code only; an account works with `is_phone_verified` false and verifies its number
+  later. Google sign-ups, which arrive with no number, are unaffected. A feature that
+  needs a proven number, SMS login or two-factor, requires it when it arrives.
+- **The latest proof wins.** A correct code for a number verified on another account
+  moves ownership: the other account's `is_phone_verified` is cleared and this one's
+  set, in one transaction, so there is never a moment with two owners or none. Refusing
+  instead would lock people out of their own number, hand recycled numbers to whoever
+  held them first for ever, and tell anyone which numbers are registered. Carriers
+  reassign numbers; whoever holds the phone today is its owner.
+- **Verifying on a new account only removes the number from the old one. It never gives
+  access to the old account.** No session, token or reset follows the number. The old
+  account is emailed that its number was verified elsewhere and is no longer verified
+  on it, so a SIM swap becomes visible rather than silent.
+- **The superuser override stays narrower than the code.** An operator proves nothing,
+  so `/admin/users/{user_id}/update/` keeps refusing a number verified elsewhere; only
+  the code moves ownership. See guardrail 21 in [ai/guardrails.md](ai/guardrails.md).
 
 ## Add it yourself
 
@@ -55,10 +79,8 @@ self-contained addition, and the ones with a recipe have the steps written out.
 | | |
 |---|---|
 | **File uploads** | S3-compatible object storage with presigned URLs. |
-| **Phone verification** | SMS codes. The `phone_number` field is already collected and validated. |
 | **Two-factor authentication** | TOTP, and a "sign out every device" endpoint, the machinery exists (`revoke_sessions`), it just has no route. |
 | **Per-account login limits** | The throttles are IP-keyed, so a spray from many addresses against one account is unlimited. [The recipe](ai/recipes/add-an-account-keyed-throttle.md) closes it. |
-| **Unique phone numbers** | Off by default, because it blocks legitimate shared household numbers. [The recipe](ai/recipes/require-unique-phone-numbers.md). |
 | **Soft-deleted accounts** | Deletion is a hard delete. [The recipe](ai/recipes/soft-delete-accounts.md) covers retaining records instead, and what it costs. |
 
 [ai/recipes/add-an-app.md](ai/recipes/add-an-app.md) is the starting point for anything

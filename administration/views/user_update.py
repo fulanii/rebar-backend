@@ -65,15 +65,21 @@ class UserUpdateView(GenericAPIView):
         | `email` | string | The login itself. Lowercased, and must not belong to another account. |
         | `first_name` | string | |
         | `last_name` | string | |
-        | `phone_number` | string | 10-digit US number, or `""` to clear it. |
+        | `phone_number` | string | Starts with `+` and the country code, or `""` to clear it. |
         | `is_active` | boolean | Whether the account may sign in at all. |
         | `is_verified` | boolean | Whether the address is treated as proven. |
+        | `is_phone_verified` | boolean | Whether the number is treated as proven. One owner per number. |
         | `is_staff` | boolean | Grants this API. Never on your own account. |
         | `is_superuser` | boolean | Grants everything, including this endpoint. Never on your own account. |
 
         Changing `email` does **not** reset `is_verified`. Correcting a typo for someone
         who is on the phone is not the same as an unproven address, so the two are set
-        separately and on purpose.
+        separately and on purpose. `phone_number` and `is_phone_verified` work the same way.
+
+        **A verified phone number has one owner.** Marking a number verified is refused
+        while another account has that same number verified, and an unverified copy of it
+        is allowed, since nobody has proven it is theirs. A verified phone also needs a
+        number, so it cannot be set on an account with none.
 
         `is_active` is what Django's own authentication checks, so clearing it signs the
         account out of every future request. It does not revoke tokens already issued.
@@ -118,6 +124,22 @@ class UserUpdateView(GenericAPIView):
         ```json
         {
             "email": ["An account with this email already exists."]
+        }
+        ```
+
+        Marking a number verified while another account has it verified:
+
+        ```json
+        {
+            "phone_number": ["This number is verified on another account."]
+        }
+        ```
+
+        Marking a phone verified on an account with no number:
+
+        ```json
+        {
+            "is_phone_verified": ["A verified phone needs a number."]
         }
         ```
 

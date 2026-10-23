@@ -441,3 +441,29 @@ why every account they touched was locked.
 request. Suspension locks the account out on its very next request, keeps the record,
 and can be undone. If you need the row gone but the history kept,
 [recipes/soft-delete-accounts.md](recipes/soft-delete-accounts.md) covers what changes.
+
+---
+
+## 21. A phone number is owned by proving it, not by typing it first
+
+**The temptation:** one account per phone number sounds like a uniqueness rule, so
+`unique=True` on `phone_number`, or a check at registration that refuses a number
+already on file.
+
+**What it breaks:** nothing proves who typed a number. Make every number unique and
+the first person to enter one owns it: anyone can register a stranger's number, and
+the real owner is turned away when they arrive. The refusal also answers "is this
+number registered?" for anybody who asks, the leak guardrail 4 closes for email.
+
+**Do this instead:** what the email address already does. Ownership is a verified
+claim, `is_phone_verified`, and the database allows one verified owner per number
+while letting unverified copies coexist. Anything that sets the flag must refuse a
+number already verified elsewhere, as `administration/serializers/user_update.py`
+does, rather than let the constraint surface as a 500. Anything that hands an account
+to a new person clears it, as the registration takeover does: whoever arrives typed a
+number and proved nothing.
+
+DRF builds its own uniqueness check from that constraint and ignores the condition, so
+a serializer writing `phone_number` must switch it off with `"validators": []` and do
+the check itself. Leave it on and an unverified copy is refused, which is the squatting
+this rule exists to prevent.

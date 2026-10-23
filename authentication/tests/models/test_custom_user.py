@@ -2,6 +2,7 @@
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 
 User = get_user_model()
 
@@ -50,3 +51,45 @@ class TestCreateSuperuser:
         assert admin.is_superuser is True
         assert admin.is_active is True
         assert admin.is_verified is True
+
+
+class TestPhoneOwnership:
+    """
+    A phone number has one verified owner, enforced by the database.
+
+    Unverified numbers may repeat: nobody has proved they own one, so refusing a second
+    claim would let whoever typed it first squat the real owner's number.
+    """
+
+    def test_an_unverified_number_can_be_shared(self, base_user, second_user):
+        second_user.phone_number = base_user.phone_number
+        second_user.save()
+
+        assert User.objects.filter(phone_number=base_user.phone_number).count() == 2
+
+    def test_a_verified_number_can_sit_beside_unverified_copies(self, base_user, second_user):
+        base_user.is_phone_verified = True
+        base_user.save()
+        second_user.phone_number = base_user.phone_number
+        second_user.save()
+
+        assert User.objects.filter(phone_number=base_user.phone_number).count() == 2
+
+    def test_a_number_cannot_be_verified_on_two_accounts(self, base_user, second_user):
+        base_user.is_phone_verified = True
+        base_user.save()
+        second_user.phone_number = base_user.phone_number
+        second_user.is_phone_verified = True
+
+        with pytest.raises(IntegrityError), transaction.atomic():
+            second_user.save()
+
+    def test_an_empty_number_cannot_be_verified(self, base_user):
+        base_user.phone_number = ""
+        base_user.is_phone_verified = True
+
+        with pytest.raises(IntegrityError), transaction.atomic():
+            base_user.save()
+
+    def test_new_users_start_with_an_unverified_number(self, base_user):
+        assert base_user.is_phone_verified is False

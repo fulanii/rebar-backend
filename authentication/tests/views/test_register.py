@@ -19,7 +19,7 @@ def payload(**overrides):
         "email": "new@example.com",
         "first_name": "Jane",
         "last_name": "Doe",
-        "phone_number": "(555) 123-4567",
+        "phone_number": "+1 (201) 555-0123",
         "password": "SecurePass123!",
         "confirm_password": "SecurePass123!",
     }
@@ -42,10 +42,15 @@ class TestRegisterSuccess:
         assert "access" not in response.data
         assert "refresh" not in response.data
 
-    def test_phone_number_is_normalized(self, api_client):
+    def test_phone_number_is_stored_in_international_format(self, api_client):
         api_client.post(reverse("register"), payload(), format="json")
 
-        assert User.objects.get(email="new@example.com").phone_number == "5551234567"
+        assert User.objects.get(email="new@example.com").phone_number == "+12015550123"
+
+    def test_a_number_from_another_country_is_accepted(self, api_client):
+        api_client.post(reverse("register"), payload(phone_number="+33 6 12 34 56 78"), format="json")
+
+        assert User.objects.get(email="new@example.com").phone_number == "+33612345678"
 
     def test_email_is_lowercased(self, api_client):
         api_client.post(reverse("register"), payload(email="NEW@Example.COM"), format="json")
@@ -120,6 +125,13 @@ class TestRegisterValidation:
         assert response.status_code == 400
         assert "phone_number" in response.data
 
+    def test_a_phone_number_without_its_country_code_is_rejected(self, api_client):
+        response = api_client.post(reverse("register"), payload(phone_number="(201) 555-0123"), format="json")
+
+        assert response.status_code == 400
+        assert "phone_number" in response.data
+        assert not User.objects.filter(email="new@example.com").exists()
+
     def test_no_account_is_created_when_validation_fails(self, api_client):
         api_client.post(reverse("register"), payload(password="weak", confirm_password="weak"), format="json")
 
@@ -184,7 +196,18 @@ class TestRegisterTakesOverAnUnverifiedAccount:
         unverified_user.refresh_from_db()
         assert unverified_user.first_name == "Jane"
         assert unverified_user.last_name == "Doe"
-        assert unverified_user.phone_number == "5551234567"
+        assert unverified_user.phone_number == "+12015550123"
+
+    def test_a_verified_phone_is_not_inherited(self, api_client, unverified_user):
+        """The new registrant typed a number and proved nothing, whatever the old row held."""
+        unverified_user.phone_number = "+33612345678"
+        unverified_user.is_phone_verified = True
+        unverified_user.save()
+
+        api_client.post(reverse("register"), payload(email=unverified_user.email), format="json")
+
+        unverified_user.refresh_from_db()
+        assert unverified_user.is_phone_verified is False
 
     def test_the_old_password_stops_working(self, api_client, unverified_user, user_password):
         taken_over = payload(

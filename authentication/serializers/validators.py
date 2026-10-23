@@ -2,6 +2,7 @@
 
 import re
 
+import phonenumbers
 from rest_framework import serializers
 
 NAME_EXTRA_CHARS = {" ", "-", "'", "’"}
@@ -22,20 +23,20 @@ def validate_name(value, field_label):
     return name
 
 
-def validate_us_phone_number(value):
-    """Normalize a US phone number to exactly ten digits."""
-    digits = re.sub(r"\D", "", value)
+def validate_phone_number(value):
+    """Any country's number, typed with `+` and its country code, normalized to E.164: `+12015550123`."""
+    if not value.strip().startswith("+"):
+        raise serializers.ValidationError("Start with + and the country code, e.g. +1 201 555 0123.")
 
-    if len(digits) == 11 and digits.startswith("1"):
-        digits = digits[1:]
+    try:
+        number = phonenumbers.parse(value)
+    except phonenumbers.NumberParseException:
+        number = None
 
-    if len(digits) != 10:
-        raise serializers.ValidationError("Enter a valid 10-digit US phone number.")
+    if number is None or not phonenumbers.is_valid_number(number):
+        raise serializers.ValidationError("Enter a valid phone number, e.g. +1 201 555 0123.")
 
-    if digits[0] in ("0", "1"):
-        raise serializers.ValidationError("Invalid US area code. Area codes cannot start with 0 or 1.")
-
-    return digits
+    return phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
 
 
 def validate_password_strength(value):

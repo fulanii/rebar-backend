@@ -10,7 +10,7 @@ non-disclosure into a formality.
 import pytest
 from django.urls import reverse
 
-from administration.serializers import UserListResponseSerializer
+from administration.serializers import UserListQueryResponseSerializer
 
 pytestmark = pytest.mark.django_db
 
@@ -45,7 +45,7 @@ class TestRowShape:
     def test_the_row_carries_exactly_the_documented_fields(self, admin_client, base_user):
         row = admin_client.get(url()).data["results"][0]
 
-        assert set(row) == set(UserListResponseSerializer.Meta.fields)
+        assert set(row) == set(UserListQueryResponseSerializer.Meta.fields)
 
     @pytest.mark.parametrize("field", ["password", "groups", "user_permissions", "sessions_revoked_at"])
     def test_credential_and_session_fields_are_never_exposed(self, admin_client, base_user, field):
@@ -71,6 +71,12 @@ class TestPagination:
         assert body["next"] is not None
         assert body["previous"] is None
 
+    def test_the_total_is_counted(self, admin_client, many_users):
+        """Thirty rows, and the staff account makes thirty-one."""
+        many_users(30)
+
+        assert admin_client.get(url()).data["count"] == 31
+
     def test_the_newest_signup_comes_first(self, admin_client, many_users):
         many_users(3)
 
@@ -78,24 +84,42 @@ class TestPagination:
 
         assert results[0]["date_joined"] > results[1]["date_joined"]
 
-    def test_following_the_cursor_returns_every_account_exactly_once(self, admin_client, many_users):
+    @pytest.mark.parametrize("ordering", ["-date_joined", "first_name", "-last_login"])
+    def test_following_next_returns_every_account_exactly_once(self, admin_client, many_users, ordering):
         """
-        What a page number would get wrong, and the reason this endpoint uses a cursor.
+        Under ties too: every `many_users` row is called "Test" and none has signed in.
 
-        Thirty rows over two pages, and the staff account makes thirty-one.
+        Without `id` as a tiebreak, rows sharing a sort value have no defined order, and
+        the database may return them differently per page, repeating or skipping them.
         """
         many_users(30)
 
-        first = admin_client.get(url()).data
-        second = admin_client.get(first["next"]).data
-        seen = [row["id"] for row in first["results"] + second["results"]]
+        first = admin_client.get(url(), {"ordering": ordering, "page_size": 10}).data
+        pages = [first]
+
+        while pages[-1]["next"]:
+            pages.append(admin_client.get(pages[-1]["next"]).data)
+
+        seen = [row["id"] for page in pages for row in page["results"]]
 
         assert len(seen) == 31
         assert len(set(seen)) == 31
-        assert second["next"] is None
 
-    def test_a_row_added_mid_read_does_not_shift_the_next_page(self, admin_client, many_users):
-        """A page number would repeat a row here. The cursor holds its position."""
+    def test_next_carries_the_filters_along(self, admin_client, many_users):
+        many_users(30)
+
+        first = admin_client.get(url(), {"search": "user1", "page_size": 5}).data
+        second = admin_client.get(first["next"]).data
+
+        assert all("user1" in row["email"] for row in second["results"])
+
+    def test_a_signup_mid_read_repeats_one_row_on_the_next_page(self, admin_client, many_users):
+        """
+        The trade-off page numbers make, pinned so it reads as a decision and not a bug.
+
+        A new signup pushes every row down by one, so the last row of page one reappears
+        at the top of page two. If an `as_of` snapshot is added, this test flips.
+        """
         many_users(30)
         first = admin_client.get(url()).data
 
@@ -104,7 +128,7 @@ class TestPagination:
         second = admin_client.get(first["next"]).data
         overlap = {row["id"] for row in first["results"]} & {row["id"] for row in second["results"]}
 
-        assert overlap == set()
+        assert len(overlap) == 1
 
     def test_the_page_size_can_be_narrowed(self, admin_client, many_users):
         many_users(30)
@@ -117,8 +141,32 @@ class TestPagination:
 
         assert len(admin_client.get(url(), {"page_size": 500}).data["results"]) == 100
 
+    @pytest.mark.parametrize("page", ["99", "zero"])
+    def test_a_page_that_does_not_exist_is_a_404(self, admin_client, page):
+        assert admin_client.get(url(), {"page": page}).status_code == 404
+
     def test_an_empty_page_is_not_an_error(self, admin_client):
         response = admin_client.get(url())
 
         assert response.status_code == 200
         assert len(response.data["results"]) == 1
+
+
+class TestFiltersOverHttp:
+    """The filters themselves are tested in tests/utils; this is the route wiring."""
+
+    def test_a_filter_narrows_the_list(self, admin_client, base_user):
+        response = admin_client.get(url(), {"is_staff": "true"})
+
+        assert [row["email"] for row in response.data["results"]] == ["operator@example.com"]
+
+    def test_an_invalid_parameter_is_a_400_naming_it(self, admin_client):
+        """Never the whole table returned as if it were the filtered result."""
+        response = admin_client.get(url(), {"ordering": "password", "is_staff": "maybe"})
+
+        assert response.status_code == 400
+        assert set(response.data) == {"ordering", "is_staff"}
+
+    def test_a_filter_does_not_get_past_the_staff_check(self, auth_client):
+        """The permission runs before the query, so a filter cannot be used to probe."""
+        assert auth_client.get(url(), {"search": "operator"}).status_code == 403

@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from authentication.models import CustomUser
-from authentication.serializers.validators import validate_name, validate_us_phone_number
+from authentication.serializers.validators import validate_name, validate_phone_number
 
 PRIVILEGE_FIELDS = {"is_staff", "is_superuser"}
 
@@ -26,10 +26,11 @@ class UserUpdateRequestSerializer(serializers.ModelSerializer):
             "phone_number",
             "is_active",
             "is_verified",
+            "is_phone_verified",
             "is_staff",
             "is_superuser",
         ]
-        extra_kwargs = {"email": {"validators": []}}
+        extra_kwargs = {"email": {"validators": []}, "phone_number": {"max_length": 32, "validators": []}}
 
     def validate_email(self, value):
         email = value.strip().lower()
@@ -46,7 +47,7 @@ class UserUpdateRequestSerializer(serializers.ModelSerializer):
         return validate_name(value, "Last name")
 
     def validate_phone_number(self, value):
-        return validate_us_phone_number(value) if value else value
+        return validate_phone_number(value) if value else value
 
     def validate(self, attrs):
         if not attrs:
@@ -55,7 +56,25 @@ class UserUpdateRequestSerializer(serializers.ModelSerializer):
         if PRIVILEGE_FIELDS & set(attrs):
             self.check_may_grant_privileges()
 
+        self.check_phone_ownership(attrs)
+
         return attrs
+
+    def check_phone_ownership(self, attrs):
+        """A verified number has one owner, and has to be a number. The database agrees."""
+        number = attrs.get("phone_number", self.instance.phone_number)
+        verified = attrs.get("is_phone_verified", self.instance.is_phone_verified)
+
+        if not verified:
+            return
+
+        if not number:
+            raise serializers.ValidationError({"is_phone_verified": ["A verified phone needs a number."]})
+
+        owners = CustomUser.objects.filter(phone_number=number, is_phone_verified=True).exclude(pk=self.instance.pk)
+
+        if owners.exists():
+            raise serializers.ValidationError({"phone_number": ["This number is verified on another account."]})
 
     def check_may_grant_privileges(self):
         """

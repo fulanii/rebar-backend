@@ -4,7 +4,12 @@ from .announcement import AnnouncementDetailResponseSerializer, AnnouncementRequ
 from .suspension import SuspensionRequestSerializer, SuspensionResponseSerializer
 from .user_delete import UserDeleteResponseSerializer
 from .user_details import UserDetailResponseSerializer
-from .user_list import UserListResponseSerializer
+from .user_list import (
+    DEFAULT_USER_LIST_ORDERING,
+    USER_LIST_ORDERING_FIELDS,
+    UserListQueryRequestSerializer,
+    UserListQueryResponseSerializer,
+)
 from .user_update import UserUpdateRequestSerializer
 
 __all__ = [
@@ -14,6 +19,9 @@ __all__ = [
     "SuspensionResponseSerializer",
     "UserDeleteResponseSerializer",
     "UserDetailResponseSerializer",
-    "UserListResponseSerializer",
+    "DEFAULT_USER_LIST_ORDERING",
+    "USER_LIST_ORDERING_FIELDS",
+    "UserListQueryRequestSerializer",
+    "UserListQueryResponseSerializer",
     "UserUpdateRequestSerializer",
 ]

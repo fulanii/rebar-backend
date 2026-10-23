@@ -24,7 +24,6 @@ months later the codebase has four patterns for the same job.
 | [add-an-app.md](recipes/add-an-app.md) | A whole new app beside `authentication`. |
 | [send-an-email.md](recipes/send-an-email.md) | A fifth transactional email. |
 | [add-an-account-keyed-throttle.md](recipes/add-an-account-keyed-throttle.md) | Closing the password-spray gap the IP throttles cannot see. |
-| [require-unique-phone-numbers.md](recipes/require-unique-phone-numbers.md) | Making `phone_number` unique, and what it costs. |
 | [soft-delete-accounts.md](recipes/soft-delete-accounts.md) | Retaining records instead of hard-deleting a user. |
 
 Everything outside this folder (configuration, deployment, the Celery worker, the
@@ -48,8 +47,8 @@ you from getting them wrong:
 
 ## The one-paragraph summary of what this is
 
-A backend that handles accounts: someone signs up with their name, email, US phone
+A backend that handles accounts: someone signs up with their name, email, phone
 number and a password; we email them a 6-digit code; entering it activates the
 account. They can then sign in, stay signed in, reset a forgotten password, change
 their email address, delete their account, or skip all of it and sign in with Google.
-Everything else, billing and your actual product, is yours to add on top.
+Everything else and your actual product, is yours to add on top.

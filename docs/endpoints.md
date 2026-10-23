@@ -15,6 +15,24 @@ the code.
 | POST | `/auth/change-email/confirm/` | JWT | Code → the account moves to that address |
 | POST | `/auth/delete-account/` | JWT | Permanently delete your own account |
 
+**Phone numbers are international, and the country code is required.** Registration
+and the admin update accept any country's number, but only typed with `+` and its
+country code: `+1 (201) 555-0123`, `+33 6 12 34 56 78`. A number without one is
+refused rather than guessed at, because `2015550123` and `06 12 34 56 78` each belong
+to a different country, and a wrong guess stores somebody else's number. Whatever
+passes is checked against Google's
+[libphonenumber](https://github.com/google/libphonenumber) rules and stored in E.164,
+`+12015550123`, so every stored number has the same shape. Extensions are dropped.
+
+**A verified phone number has exactly one owner, an unverified one has none.** Like an
+email address, a number belongs to whoever proves it, which is `is_phone_verified`.
+The database allows a number to be verified on one account only, and allows any
+number of unverified copies: until somebody proves a number is theirs, refusing a
+second claim would let whoever typed it first squat it, and would tell anyone whether
+a number is registered. Nothing sets the flag yet except a superuser through
+`/admin/users/{user_id}/update/`, which is refused while another account has that
+number verified; SMS verification is on the [roadmap](roadmap.md).
+
 ## Email verification
 
 | Method | Path | Auth | Purpose |
@@ -68,7 +86,7 @@ and `is_staff` is a flag this API itself hands out.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/admin/users/` | staff | Every account, cursor paginated, newest first |
+| GET | `/admin/users/` | staff | Every account, filtered, searched and sorted, page numbered |
 | GET | `/admin/users/{user_id}/` | staff | One account in full |
 | PATCH | `/admin/users/{user_id}/update/` | superuser | Correct an account on its owner's behalf |
 | POST | `/admin/users/{user_id}/suspension/` | superuser | Suspend, with a reason |
@@ -102,9 +120,25 @@ history and its outstanding refresh tokens with it. Suspensions the account *iss
 survive with `suspended_by` set to `null`, so the record of what an operator did
 outlives their account. Reach for suspension for anything short of an erasure request.
 
-Not built: an audit trail for the update endpoint, filters on either list, and any
-route for revoking sessions, triggering a reset or resending verification on somebody
-else's behalf. See [roadmap.md](roadmap.md).
+**The user list filters through one function.** `administration/utils/user_filters.py`
+is the single definition of which accounts match a set of query parameters: search
+across email and both names, the phone digits, each account flag, the sign-in provider,
+whether the account has ever signed in, a join-date range counted in the caller's time
+zone, and a sort. The list reads it, and so will email campaigns, so the people an
+operator previews are the people a campaign reaches. Every parameter is optional and
+validated: a typo is a 400 naming it, never the whole table passed off as the result.
+The full table of parameters is on the Swagger page.
+
+**It is page numbered, not cursor paginated**, for the total `count`, jumping to a page,
+and sorting on `last_login`, which is empty for anyone who never signed in and which a
+cursor cannot hold a position on. The cost is drift: a signup landing mid-read pushes
+the rows down, so the next page repeats one. Ties in the sort are broken by `id`, so
+nothing else moves between pages. `/admin/suspensions/` keeps its cursor: an
+append-only history, newest first, with no sort to choose.
+
+Not built: an audit trail for the update endpoint, filters on the suspension list, and
+any route for revoking sessions, triggering a reset or resending verification on
+somebody else's behalf. See [roadmap.md](roadmap.md).
 
 ## Site
 

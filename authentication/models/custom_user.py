@@ -42,6 +42,7 @@ class CustomUser(AbstractUser):
     sessions_revoked_at = models.DateTimeField(null=True, blank=True)
 
     is_verified = models.BooleanField(default=False)
+    is_phone_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False, db_index=True)
 
@@ -55,6 +56,19 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
     objects = CustomUserManager()
+
+    class Meta(AbstractUser.Meta):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["phone_number"],
+                condition=models.Q(is_phone_verified=True),
+                name="one_verified_owner_per_phone_number",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(is_phone_verified=False) | ~models.Q(phone_number=""),
+                name="a_verified_phone_has_a_number",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"

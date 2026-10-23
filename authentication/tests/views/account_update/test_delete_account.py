@@ -62,7 +62,7 @@ class TestDeleteAccount:
                 "email": email,
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "phone_number": "5551234567",
+                "phone_number": "+12015550123",
                 "password": "SecurePass123!",
                 "confirm_password": "SecurePass123!",
             },

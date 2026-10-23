@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from authentication.models import CustomUser
 
-from .validators import validate_name, validate_password_strength, validate_us_phone_number
+from .validators import validate_name, validate_password_strength, validate_phone_number
 
 User = get_user_model()
 
@@ -33,6 +33,7 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(
         required=True,
         allow_blank=False,
+        max_length=32,
         error_messages={
             "required": "Phone number is required.",
             "blank": "Phone number cannot be blank.",
@@ -59,7 +60,7 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
         return validate_name(value, "Last name")
 
     def validate_phone_number(self, value):
-        return validate_us_phone_number(value)
+        return validate_phone_number(value)
 
     def validate_password(self, value):
         return validate_password_strength(value)
@@ -97,6 +98,7 @@ class UserRegistrationRequestSerializer(serializers.ModelSerializer):
 
         user.set_password(password)
         user.is_active = False
+        user.is_phone_verified = False
         user.auth_provider = CustomUser.AuthProvider.EMAIL
         user.save()
 

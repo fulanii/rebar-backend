@@ -6,7 +6,7 @@ from rest_framework import serializers
 from authentication.serializers.validators import (
     validate_name,
     validate_password_strength,
-    validate_us_phone_number,
+    validate_phone_number,
     validate_verification_code,
 )
 
@@ -15,35 +15,65 @@ class TestPhoneNumber:
     @pytest.mark.parametrize(
         "raw",
         [
-            "5551234567",
-            "555-123-4567",
-            "(555) 123-4567",
-            "555.123.4567",
-            "+1 555 123 4567",
-            "1-555-123-4567",
-            "  555 123 4567  ",
+            "+12015550123",
+            "+1 201 555 0123",
+            "+1 (201) 555-0123",
+            "+1.201.555.0123",
+            "  +1 201 555 0123  ",
         ],
     )
-    def test_every_format_normalizes_to_ten_digits(self, raw):
-        assert validate_us_phone_number(raw) == "5551234567"
+    def test_every_format_normalizes_to_e164(self, raw):
+        assert validate_phone_number(raw) == "+12015550123"
+
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("+33 6 12 34 56 78", "+33612345678"),
+            ("+227 90 12 34 56", "+22790123456"),
+            ("+49 1512 3456789", "+4915123456789"),
+            ("+81 90-1234-5678", "+819012345678"),
+        ],
+    )
+    def test_a_number_from_any_country_is_accepted(self, raw, expected):
+        assert validate_phone_number(raw) == expected
 
     @pytest.mark.parametrize(
         "raw",
         [
-            "555123456",
-            "55512345678",
-            "",
-            "abcdefghij",
+            "2015550123",
+            "(201) 555-0123",
+            "1-201-555-0123",
+            "06 12 34 56 78",
+            "001 201 555 0123",
         ],
     )
-    def test_wrong_length_is_rejected(self, raw):
-        with pytest.raises(serializers.ValidationError):
-            validate_us_phone_number(raw)
+    def test_a_number_without_its_country_code_is_rejected(self, raw):
+        """Its country is a guess, and a guess stores somebody else's number."""
+        with pytest.raises(serializers.ValidationError, match="Start with \\+"):
+            validate_phone_number(raw)
 
-    @pytest.mark.parametrize("raw", ["0551234567", "1551234567"])
-    def test_area_code_cannot_start_with_zero_or_one(self, raw):
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "+1 201 555 012",
+            "+1 201 555 01234",
+            "+",
+            "+abcdefghij",
+            "+999 123 456 789",
+        ],
+    )
+    def test_a_number_that_is_not_valid_is_rejected(self, raw):
+        with pytest.raises(serializers.ValidationError, match="valid phone number"):
+            validate_phone_number(raw)
+
+    def test_a_number_that_cannot_exist_is_rejected(self):
+        """The right length is not enough: 555 is not a real US area code."""
         with pytest.raises(serializers.ValidationError):
-            validate_us_phone_number(raw)
+            validate_phone_number("+1 555 123 4567")
+
+    def test_an_empty_number_is_rejected(self):
+        with pytest.raises(serializers.ValidationError):
+            validate_phone_number("")
 
 
 class TestName:

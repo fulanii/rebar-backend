@@ -57,7 +57,7 @@ class TestWhatItWrites:
     def test_it_updates_the_fields_it_is_given(self, superuser_client, base_user):
         response = superuser_client.patch(
             url(base_user),
-            {"first_name": "Janet", "last_name": "Smith", "phone_number": "5559998888"},
+            {"first_name": "Janet", "last_name": "Smith", "phone_number": "+33 6 12 34 56 78"},
             format="json",
         )
 
@@ -66,7 +66,7 @@ class TestWhatItWrites:
         assert (base_user.first_name, base_user.last_name, base_user.phone_number) == (
             "Janet",
             "Smith",
-            "5559998888",
+            "+33612345678",
         )
 
     def test_it_leaves_everything_it_was_not_given(self, superuser_client, base_user):
@@ -144,7 +144,13 @@ class TestWhatItRefuses:
 
         assert response.status_code == 400
 
-    def test_a_phone_number_that_is_not_a_us_number_is_refused(self, superuser_client, base_user):
+    def test_a_formatted_international_number_is_not_refused_for_its_length(self, superuser_client, base_user):
+        """Longer than the stored form, which is the validator's job to produce."""
+        response = superuser_client.patch(url(base_user), {"phone_number": "+44 (0)20 7946 0958"}, format="json")
+
+        assert response.status_code == 200
+
+    def test_a_phone_number_that_is_not_valid_is_refused(self, superuser_client, base_user):
         response = superuser_client.patch(url(base_user), {"phone_number": "12345"}, format="json")
 
         assert response.status_code == 400
@@ -184,3 +190,85 @@ class TestPrivilegeFields:
         superuser.refresh_from_db()
         assert response.status_code == 200
         assert superuser.first_name == "Rooted"
+
+
+class TestPhoneOwnership:
+    """
+    A superuser can mark a number verified only while no other account has it verified.
+
+    Without this, support could hand a proven number to a second account, and the
+    database constraint would surface it as a 500 instead of a readable refusal.
+    """
+
+    NUMBER = "+12015550123"
+
+    @pytest.fixture
+    def owner(self, second_user):
+        second_user.phone_number = self.NUMBER
+        second_user.is_phone_verified = True
+        second_user.save()
+        return second_user
+
+    def test_a_number_nobody_has_verified_can_be_marked_verified(self, superuser_client, base_user):
+        response = superuser_client.patch(
+            url(base_user), {"phone_number": self.NUMBER, "is_phone_verified": True}, format="json"
+        )
+
+        base_user.refresh_from_db()
+        assert response.status_code == 200
+        assert base_user.is_phone_verified is True
+
+    def test_a_number_verified_elsewhere_cannot_be_marked_verified(self, superuser_client, base_user, owner):
+        response = superuser_client.patch(
+            url(base_user), {"phone_number": self.NUMBER, "is_phone_verified": True}, format="json"
+        )
+
+        base_user.refresh_from_db()
+        assert response.status_code == 400
+        assert "phone_number" in response.data
+        assert base_user.is_phone_verified is False
+
+    def test_the_flag_alone_is_refused_when_the_current_number_is_verified_elsewhere(
+        self, superuser_client, base_user, owner
+    ):
+        base_user.phone_number = self.NUMBER
+        base_user.save()
+
+        response = superuser_client.patch(url(base_user), {"is_phone_verified": True}, format="json")
+
+        assert response.status_code == 400
+
+    def test_a_verified_account_cannot_move_onto_a_number_verified_elsewhere(self, superuser_client, base_user, owner):
+        base_user.is_phone_verified = True
+        base_user.save()
+
+        response = superuser_client.patch(url(base_user), {"phone_number": self.NUMBER}, format="json")
+
+        assert response.status_code == 400
+
+    def test_a_number_verified_elsewhere_can_still_be_stored_unverified(self, superuser_client, base_user, owner):
+        """Unverified copies may be shared, refusing them would let anyone squat a number."""
+        response = superuser_client.patch(url(base_user), {"phone_number": self.NUMBER}, format="json")
+
+        base_user.refresh_from_db()
+        assert response.status_code == 200
+        assert base_user.phone_number == self.NUMBER
+
+    def test_the_owner_may_keep_its_own_verified_number(self, superuser_client, owner):
+        response = superuser_client.patch(url(owner), {"first_name": "Renamed"}, format="json")
+
+        assert response.status_code == 200
+
+    def test_a_phone_cannot_be_verified_without_a_number(self, superuser_client, base_user):
+        response = superuser_client.patch(
+            url(base_user), {"phone_number": "", "is_phone_verified": True}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert "is_phone_verified" in response.data
+
+    def test_clearing_a_verified_number_needs_the_flag_cleared_too(self, superuser_client, owner):
+        refused = superuser_client.patch(url(owner), {"phone_number": ""}, format="json")
+        accepted = superuser_client.patch(url(owner), {"phone_number": "", "is_phone_verified": False}, format="json")
+
+        assert (refused.status_code, accepted.status_code) == (400, 200)
