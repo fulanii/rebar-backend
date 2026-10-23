@@ -59,6 +59,7 @@ class UserListView(ListAPIView):
         | `has_phone` | boolean | Whether the account has a phone number at all. |
         | `is_active` | boolean | |
         | `is_verified` | boolean | Whether the email address is verified. |
+        | `is_phone_verified` | boolean | Whether the account is the verified owner of its number. |
         | `is_suspended` | boolean | |
         | `is_staff` | boolean | |
         | `auth_provider` | string | `email` or `google`. |

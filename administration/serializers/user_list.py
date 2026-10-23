@@ -36,6 +36,7 @@ class UserListQueryRequestSerializer(serializers.Serializer):
     has_phone = OptionalBooleanField(required=False)
     is_active = OptionalBooleanField(required=False)
     is_verified = OptionalBooleanField(required=False)
+    is_phone_verified = OptionalBooleanField(required=False)
     is_suspended = OptionalBooleanField(required=False)
     is_staff = OptionalBooleanField(required=False)
     has_logged_in = OptionalBooleanField(required=False)

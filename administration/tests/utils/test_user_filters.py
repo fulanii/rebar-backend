@@ -112,6 +112,12 @@ class TestPhone:
 
         assert "phone" in error.value.detail
 
+    def test_is_phone_verified(self):
+        CustomUser.objects.filter(email="paris@example.com").update(is_phone_verified=True)
+
+        assert emails("is_phone_verified=true") == ["paris@example.com"]
+        assert sorted(emails("is_phone_verified=false")) == ["newark@example.com", "none@example.com"]
+
     def test_has_phone(self):
         assert sorted(emails("has_phone=true")) == ["newark@example.com", "paris@example.com"]
         assert emails("has_phone=false") == ["none@example.com"]

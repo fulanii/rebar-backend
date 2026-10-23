@@ -6,7 +6,7 @@ from django.db.models.functions import TruncDate
 from administration.serializers import UserListQueryRequestSerializer
 from authentication.models import CustomUser
 
-EXACT_FILTERS = ("is_active", "is_verified", "is_suspended", "is_staff", "auth_provider")
+EXACT_FILTERS = ("is_active", "is_verified", "is_phone_verified", "is_suspended", "is_staff", "auth_provider")
 
 SEARCH_FIELDS = ("email", "first_name", "last_name")
 
