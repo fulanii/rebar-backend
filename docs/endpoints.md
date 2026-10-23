@@ -96,6 +96,7 @@ and `is_staff` is a flag this API itself hands out.
 | GET | `/admin/announcement/` | staff | The site banner, hidden or not |
 | PUT | `/admin/announcement/` | superuser | Write the banner, creating it the first time |
 | DELETE | `/admin/announcement/` | superuser | Remove the banner |
+| GET | `/admin/stats/` | staff | Total accounts and signups in the last 7 days |
 
 Every one of these confirms whether an address is registered, which every route under
 `/auth/` refuses to do. That is the point of them, and it is why the permission class

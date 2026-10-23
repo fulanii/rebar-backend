@@ -4,6 +4,7 @@ from django.urls import path
 
 from .views import (
     AnnouncementEditView,
+    StatsView,
     SuspensionListView,
     SuspensionView,
     UserDeleteView,
@@ -20,4 +21,5 @@ urlpatterns = [
     path("users/<int:user_id>/delete/", UserDeleteView.as_view(), name="admin-user-delete"),
     path("suspensions/", SuspensionListView.as_view(), name="admin-suspension-list"),
     path("announcement/", AnnouncementEditView.as_view(), name="admin-announcement"),
+    path("stats/", StatsView.as_view(), name="admin-stats"),
 ]
