@@ -17,6 +17,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             "last_name",
             "phone_number",
             "is_verified",
+            "is_phone_verified",
             "is_active",
             "auth_provider",
             "date_joined",

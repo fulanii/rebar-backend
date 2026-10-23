@@ -113,7 +113,7 @@ class TestUpdateCannotReachOtherFields:
     def test_the_phone_number_cannot_be_changed_here(self, auth_client, base_user):
         original = base_user.phone_number
 
-        update(auth_client, first_name="Janet", phone_number="5559999999")
+        update(auth_client, first_name="Janet", phone_number="+12015550199")
 
         base_user.refresh_from_db()
         assert base_user.phone_number == original

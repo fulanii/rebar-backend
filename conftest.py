@@ -86,7 +86,7 @@ def base_user(db, user_password):
         password=user_password,
         first_name="Test",
         last_name="User",
-        phone_number="5551234567",
+        phone_number="+12015550100",
         is_active=True,
         is_verified=True,
     )
@@ -100,7 +100,7 @@ def second_user(db, user_password):
         password=user_password,
         first_name="Other",
         last_name="User",
-        phone_number="5559876543",
+        phone_number="+12015550101",
         is_active=True,
         is_verified=True,
     )
@@ -114,7 +114,7 @@ def unverified_user(db, user_password):
         password=user_password,
         first_name="Pending",
         last_name="User",
-        phone_number="5555550100",
+        phone_number="+12015550102",
         is_active=False,
         is_verified=False,
     )

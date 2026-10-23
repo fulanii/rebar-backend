@@ -235,7 +235,7 @@ class TestAdoptingAnExistingAccount:
             password=attacker_password,
             first_name="Victim",
             last_name="User",
-            phone_number="5551230000",
+            phone_number="+12015550130",
         )
 
         complete_callback(

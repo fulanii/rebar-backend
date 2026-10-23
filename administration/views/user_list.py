@@ -93,6 +93,7 @@ class UserListView(ListAPIView):
                     "phone_number": "+12015550123",
                     "is_active": true,
                     "is_verified": true,
+                    "is_phone_verified": false,
                     "is_suspended": false,
                     "auth_provider": "email",
                     "date_joined": "2026-09-01T10:00:00Z",

@@ -24,6 +24,7 @@ class UserDetailResponseSerializer(serializers.ModelSerializer):
             "phone_number",
             "is_active",
             "is_verified",
+            "is_phone_verified",
             "is_suspended",
             "is_staff",
             "is_superuser",

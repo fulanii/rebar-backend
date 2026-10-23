@@ -37,7 +37,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, blank=False, db_index=True)
     first_name = models.CharField(max_length=150, blank=False)
     last_name = models.CharField(max_length=150, blank=False)
-    phone_number = models.CharField(max_length=15, blank=True, default="")
+    phone_number = models.CharField(max_length=16, blank=True, default="")
 
     sessions_revoked_at = models.DateTimeField(null=True, blank=True)
 

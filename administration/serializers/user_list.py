@@ -85,6 +85,7 @@ class UserListQueryResponseSerializer(serializers.ModelSerializer):
             "phone_number",
             "is_active",
             "is_verified",
+            "is_phone_verified",
             "is_suspended",
             "auth_provider",
             "date_joined",

@@ -97,7 +97,7 @@ class UserUpdateView(GenericAPIView):
             "email": "jane@example.com",
             "first_name": "Jane",
             "last_name": "Doe",
-            "phone_number": "5551234567",
+            "phone_number": "+12015550123",
             "is_active": true,
             "is_verified": true,
             "is_suspended": false,
